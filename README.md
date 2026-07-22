@@ -1,6 +1,10 @@
 Estructura del proyecto a ejecutar:
-CarpetaContenedora
-    |
-     - Vistas
-    |
-     - APIs
+```text
+
+Carpeta_Contenedora/
+    │
+    ├── Vistas/      # Frontend 
+    │
+    └── APIs/        # Backend 
+
+```

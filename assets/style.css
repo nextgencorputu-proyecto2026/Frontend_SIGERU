@@ -1,0 +1,24 @@
+*{
+    margin: 0;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+body{
+    min-height: 100vh;
+    background-color: #e8eff7;
+    padding-top: 70px;
+}
+
+.offcanvas.offcanvas-start {
+    --bs-offcanvas-width: 220px !important;
+}
+
+#logoLogin{
+    height: 350px;
+    width: 350px;
+}
+
+#mapa{
+    height: 550px;
+}

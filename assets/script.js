@@ -3,6 +3,35 @@
     CAMIONES
 --------------------- */
 
+//   JS para API
+const BusquedaCamiones = document.getElementById("formBusquedaCamiones");
+
+BusquedaCamiones.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const matricula = document.getElementById("inputMatricula").value.trim();
+
+    let url = "../APIs/getCamiones.php";
+
+    // Si el input tiene texto se envía como parámetro
+    if (matricula !== "") {
+        url += "?matricula=" + matricula;
+    }
+
+    const respuesta = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+
+    const camiones = await respuesta.json();
+
+    cargarTabla(camiones);
+
+});
+
 // Funcion para cargar la tabla con los datos de los camiones
 function cargarTabla(camiones) {
 

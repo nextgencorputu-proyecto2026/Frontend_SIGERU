@@ -12,25 +12,33 @@
 
 <body>
 
-    <form class="container col-6 container d-flex flex-column mb-3 justyfy-content-center align-items-center" action="#" method="POST ">
-        <img id="logoLogin"src="Img/Logo SIGERU minimalista.png" alt="Logo" class="col-12">
+    <form action="http://localhost/APIs_SIGERU/login.php"
+      method="POST"
+      class="container col-6 d-flex flex-column mb-3 justify-content-center align-items-center">
+        <img id="logoLogin" src="Img/Logo SIGERU minimalista.png" alt="Logo" class="col-12">
         <h1 class="d-flex justify-content-center">INICIAR SESIÓN</h1>
-        
+
         <div class="col-6 form-floating mb-3">
-            <input type="email" class="form-control rounded-pill border border-4" id="Email" placeholder="Email">
+            <input type="email" class="form-control rounded-pill border border-4" id="Email" name="email"
+                placeholder="Email" required>
             <label for="floatingInput">Email</label>
         </div>
         <div class="col-6 form-floating ">
-            <input type="password" class="form-control rounded-pill border border-4" id="Password" placeholder="Password">
+            <input type="password"
+       class="form-control rounded-pill border border-4"
+       id="Password"
+       name="password"
+       placeholder="Password"
+       required>
             <label for="floatingPassword">Contraseña</label>
         </div>
         <div class="col-6 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary m-2 rounded-pill">Ingresar</button>
         </div>
-        
+
     </form>
 
-<script src="assets/script.js"></script>
+    <script src="assets/script.js"></script>
 
 </body>
 

@@ -3,8 +3,8 @@ Estructura del proyecto a ejecutar:
 
 Carpeta_Contenedora/
     │
-    ├── Vistas/      # Frontend 
+    ├── Frontend_SIGERU/      # Frontend 
     │
-    └── APIs/        # Backend 
+    └── APIs_SIGERU/        # Backend 
 
 ```

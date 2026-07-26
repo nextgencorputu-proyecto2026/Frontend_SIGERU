@@ -1,6 +1,6 @@
 Estructura del proyecto a ejecutar:
 CarpetaContenedora
     |
-     - Vistas
+     - Frontend_SIGERU
     |
-     - APIs
+     - APIs_SIGERU

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="./assets/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+</head>
+
+<body class="d-flex flex-column">
+    <nav class="navbar navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-toggler">
+                <div class="container-fluid d-flex align-items-center gap-3">
+                    <h2 class="navbar-brand mb-0">Usuario</h2>
+
+                    <a href="login.html" class="nav-link">Nueva Pagina</a>
+
+                    <a href="landing.html" class="btn btn-danger btn-sm ms-auto">Cerrar sesión</a>
+                </div>
+            </div>
+            <div class="offcanvas offcanvas-start text-bg-dark"
+                style="width: 200px !important; --bs-offcanvas-width: 200px !important;" tabindex="-1"
+                id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">SIGERU</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                        <li class="nav-item">
+                            <a class="nav-link" href="home.html" role="button">Inicio</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Contenedores
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a id="Mapa_Contenedores" class="dropdown-item" href="mapaContenedores.html">Mapa
+                                        Contenedores</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 2</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 3</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Camiones
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="listaCamiones.html">Lista Camiones</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 2</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 3</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Rutas
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="#">Accion 1</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 2</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 3</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Personal
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="#">Accion 1</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 2</a></li>
+                                <li><a class="dropdown-item" href="#">Accion 3</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <div class="container py-4">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-10 col-lg-8">
+
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h2 class="h4 mb-0">Agregar contenedor</h2>
+                        </div>
+
+                        <div class="card-body">
+                            <form id="formContenedor" method="POST" action="../Api/agregarContenedor.php">
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ubicacionX" class="form-label">
+                                            Ubicación X
+                                        </label>
+
+                                        <input type="text" class="form-control" id="ubicacionX" name="ubicacionX"
+                                            placeholder="Ingrese la ubicación X" required>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ubicacionY" class="form-label">
+                                            Ubicación Y
+                                        </label>
+
+                                        <input type="text" class="form-control" id="ubicacionY" name="ubicacionY"
+                                            placeholder="Ingrese la ubicación Y" required>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="estado" class="form-label">
+                                            Estado
+                                        </label>
+
+                                        <select class="form-select" id="estado" name="estado" required>
+                                            <option value="" selected disabled> Seleccione estado</option>
+                                            <option value="Disponible">Disponible</option>
+                                            <option value="En mantenimiento"> En mantenimiento </option>
+                                            <option value="Fuera de servicio"> Fuera de servicio </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nivelLlenado" class="form-label">
+                                            Nivel de llenado
+                                        </label>
+
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="nivelLlenado"
+                                                name="nivelLlenado" required>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label for="tipoResiduo" class="form-label">
+                                        Tipo de residuo
+                                    </label>
+
+                                    <select class="form-select" id="tipoResiduo" name="tipoResiduo" required>
+                                        <option value="" selected disabled> Seleccione el tipo de residuo </option>
+                                        <option value="Reciclables">Reciclables</option>
+                                        <option value="Mezclados">Mezclados</option>
+                                    </select>
+                                </div>
+
+
+                                <div class="mb-4">
+                                    <label for="idRuta" class="form-label">
+                                        Ruta asignada
+                                    </label>
+
+                                    <select class="form-select" id="idRuta" name="idRuta" required>
+                                        <option value="" selected disabled> Seleccione una ruta </option>
+
+                                        <option value="1">Ruta 1</option>
+                                        <option value="2">Ruta 2</option>
+                                        <option value="3">Ruta 3</option>
+                                    </select>
+                                </div>
+
+
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        Agregar contenedor
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="assets/script.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+
+</body>
+
+</html>

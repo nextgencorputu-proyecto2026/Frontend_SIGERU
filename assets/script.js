@@ -1,12 +1,44 @@
 
+//  NAVBAR
+
+async function cargarNavbar() {
+    const contenedor = document.getElementById("navbar-container");
+
+    if (!contenedor) return;
+
+    const rutaNavbar = "./components/navbar.html";
+
+    try {
+
+        const respuesta = await fetch(rutaNavbar);
+
+        if (!respuesta.ok) {
+            throw new Error(
+                `Error HTTP ${respuesta.status}: ${respuesta.statusText}`
+            );
+        }
+
+        contenedor.innerHTML = await respuesta.text();
+
+    } catch (error) {
+
+        contenedor.innerHTML = `
+            <div class="alert alert-danger">
+                No se pudo cargar la barra de navegación.
+            </div>
+        `;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", cargarNavbar);
+
+
+
 /* ---------------------
     CAMIONES
 --------------------- */
 
 //   JS para API
-
-
-
 
 
 const BusquedaCamiones = document.getElementById("formBusquedaCamiones");

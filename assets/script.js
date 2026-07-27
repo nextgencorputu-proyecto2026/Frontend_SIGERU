@@ -19,7 +19,7 @@ if (BusquedaCamiones) {
 
         const matricula = document.getElementById("inputMatricula").value.trim();
 
-        let url = "http://localhost/ProyectoFinal2026/APIs_SIGERU/getCamiones.php";
+        let url = "../APIs_SIGERU/getCamiones.php";
 
         if (matricula !== "") {
             url += "?matricula=" + matricula;
@@ -110,7 +110,7 @@ function cargarTabla(camiones) {
 }
 if (document.getElementById("tablaCamiones")) {
 
-    fetch("http://localhost/ProyectoFinal2026/APIs_SIGERU/getCamiones.php")
+    fetch("../APIs_SIGERU/getCamiones.php")
         .then(res => res.json())
         .then(data => cargarTabla(data))
         .catch(error => console.error(error));
@@ -187,7 +187,7 @@ async function cargarMapaContenedores() {
 
 
         const respuesta = await fetch(
-            "http://localhost/ProyectoFinal2026/APIs_SIGERU/getContenedores.php",
+            "../APIs_SIGERU/getContenedores.php",
             {
 
                 method: "GET",

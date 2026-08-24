@@ -13,13 +13,13 @@
 
 <body>
 
-    
+
 
     <nav class="navbar navbar-expand-lg bg-white sticky-top shadow-sm">
         <div class="container">
 
             <a class="navbar-brand" href="#">
-                <img src="Img/Logo.png" alt="NextGen Corp" id="Logo" class="img-fluid Logo">
+                <img src="img/Logo.png" alt="NextGen Corp" id="Logo" class="img-fluid Logo">
             </a>
 
             <!-- Botón desplegable -->
@@ -40,7 +40,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="#descripcion">
+                        <a class="nav-link" href="#quienes_somos">
                             Quienes somos
                         </a>
                     </li>
@@ -55,10 +55,10 @@
 
                 <div class="text-center mt-3 mt-lg-0">
 
-                    <a href="#form" class="btn btn-success">
+                    <a href="#form" class="btn btn-success boton-navbar">
                         Solicitar Servicio
                     </a>
-                    <a href="login.html" class="btn btn-success">
+                    <a href="login.html" class="btn btn-success boton-navbar">
                         Iniciar sesion
                     </a>
 
@@ -70,7 +70,7 @@
     </nav>
 
 
-    
+
 
     <section class="hero">
 
@@ -92,7 +92,7 @@
                             Nuestros servicios
                         </a>
 
-                        <a href="#descripcion" class="btn btn-outline-light btn-lg">
+                        <a href="#objetivos" class="btn btn-outline-light btn-lg">
                             Conocer más
                         </a>
 
@@ -106,7 +106,7 @@
     </section>
 
 
-    
+
 
     <main id="main">
         <div class="content">
@@ -163,7 +163,7 @@
             </article>
 
 
-            
+
 
             <section class="container-fluid">
                 <div class="container mb-5" id="quienes_somos">
@@ -177,7 +177,7 @@
                 </div>
 
 
-                
+
 
                 <div class="container-fluid mb-5">
                     <div class="row g-3">
@@ -220,7 +220,7 @@
                     <br>
 
 
-                    
+
 
                     <div class="container-fluid py-4">
 
@@ -254,7 +254,7 @@
                                 </div>
                             </div>
 
-                           
+
                             <div class="col-12 col-md-4 col-lg-4">
                                 <div class="tarjetas h-100 p-4">
 
@@ -284,7 +284,7 @@
 
 
 
-            
+
             <section>
                 <div class="container-fluid mb-5">
                     <div class="row g-3">
@@ -342,7 +342,7 @@
 
 
 
-            
+
             <section>
 
                 <h2> <i class="bi bi-geo-alt"></i> Ubicacion </h2>
@@ -354,7 +354,7 @@
             </section>
 
 
-            
+
             <section id="lideres">
 
                 <h2 class="text-center mb-4"> <i class="bi bi-person-workspace"></i> Líderes del Proyecto</h2>
@@ -416,7 +416,7 @@
             </section>
 
 
-            
+
             <section>
                 <div class="container">
 
@@ -427,43 +427,47 @@
 
                             <form id="form">
                                 <label class="form-label"> Nombre Completo </label>
-                                <input type="text" class="form-control" required>
+                                <input type="text" class="form-control" placeholder="Ingrese Nombre completo"
+                                    minlength="10" maxlength="50" required>
 
                                 <label class="form-label"> Correo Electronico </label>
-                                <input type="email" class="form-control" required>
+                                <input type="email" class="form-control" placeholder="Ingrese su correo electronico"
+                                    minlength="10" maxlength="30" required>
 
                                 <label class="form-label"> Telefono </label>
-                                <input type="tel" class="form-control" required>
+                                <input type="tel" class="form-control" placeholder="Ingrese su telefono" minlength="8"
+                                    maxlength="20" required>
 
                                 <label class="form-label"> Direccion de Contenedor </label>
-                                <input type="text" class="form-control" required>
+                                <input type="text" class="form-control" placeholder="Ingrese direccion de contenedor"
+                                    minlength="10" maxlength="35" required>
 
                                 <label class="form-label"> Barrio </label>
                                 <select class="form-select">
-                                    <option>Seleccione...</option>
-                                    <option> Pocitos </option>
-                                    <option> Parque Rodó </option>
                                     <option> Buceo </option>
-                                    <option> Tres Cruces </option>
-                                    <option> Parque Batlle </option>
                                     <option> La Blanqueada </option>
+                                    <option> Parque Batlle </option>
+                                    <option> Parque Rodó </option>
+                                    <option> Pocitos </option>
+                                    <option> Tres Cruces </option>
                                     <option> Villa Dolores </option>
                                 </select>
 
                                 <label class="form-label">Tipo de Servicio</label>
                                 <select class="form-select">
-                                    <option>Seleccione...</option>
-                                    <option>Recoleccion de Residuos Comunes</option>
-                                    <option>Recoleccion de Residuos Grandes</option>
                                     <option>Contenedor Dañado</option>
                                     <option>Contenedor Desbordado</option>
+                                    <option>Recoleccion de Residuos Comunes</option>
+                                    <option>Recoleccion de Residuos Grandes</option>
                                 </select>
 
                                 <label class="form-label"> Fecha Solicitada</label>
                                 <input type="date" class="form-control">
 
+
                                 <label class="form-label">Descripcion</label>
-                                <textarea class="form-control"></textarea>
+                                <textarea class="form-control" placeholder="Descripcion" minlength="8" maxlength="100"
+                                    required></textarea>
 
                                 <button class="btn btn-success btn-enviar"><i class="bi bi-send-fill"></i> Enviar
                                     Solicitud</button>
@@ -478,7 +482,7 @@
     </main>
 
 
-    
+
 
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 border-top">
 

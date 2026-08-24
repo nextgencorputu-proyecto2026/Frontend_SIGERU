@@ -52,3 +52,10 @@ main img:hover{
     height:350px;
     width:350px;
 }
+@media (max-width: 768px) {
+
+    #mapa {
+        height: 400px;
+    }
+
+}

@@ -142,7 +142,7 @@ function cargarTabla(camiones) {
 }
 if (document.getElementById("tablaCamiones")) {
 
-    fetch("../APIs_SIGERU/getCamiones.php")
+    fetch("../APIs_SIGERU/recoleccion/camiones/routes/camiones.php")
         .then(res => res.json())
         .then(data => cargarTabla(data))
         .catch(error => console.error(error));
@@ -219,7 +219,7 @@ async function cargarMapaContenedores() {
 
 
         const respuesta = await fetch(
-            "../APIs_SIGERU/getContenedores.php",
+            "../APIs_SIGERU/recoleccion/contenedores/routes/contenedores.php",
             {
 
                 method: "GET",

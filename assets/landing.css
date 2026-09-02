@@ -253,3 +253,64 @@ h2 {
     margin-bottom: 20px;
     
 }
+@media (max-width: 768px) {
+
+    .container {
+        padding-inline: 15px;
+    }
+
+    #cards {
+        padding: 25px 10px;
+    }
+
+    .hero {
+        height: auto;
+        min-height: 70vh;
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+    .hero p {
+        font-size: 17px;
+    }
+
+    .tarjetas {
+        padding: 20px;
+    }
+
+    #quienes_somos {
+        padding: 25px;
+    }
+
+    #lideres .card {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    p {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    h2 {
+        font-size: 26px;
+        padding: 20px 5px;
+    }
+
+    .listaobjetivos li {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+}
+@media (max-width: 768px) {
+
+    .boton-navbar {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
+
+}

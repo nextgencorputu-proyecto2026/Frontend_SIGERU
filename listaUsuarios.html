@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body class="d-flex flex-column">
+
+    <div id="navbar-container"></div>
+
+    <main class="container">
+        <h2 class="text-center">USUARIOS</h2>
+
+        <!-- barra de busqueda -->
+        <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid justify-content-center">
+                <form id="formBusquedaUsuarios" class="d-flex" role="search">
+                    <input id="inputNombre" class="form-control me-2" type="search" placeholder="Nombre"
+                        aria-label="Nombre" />
+                    <button id="buscarUsuarios" class="btn btn-outline-success" type="submit"
+                        method="GET">Buscar</button>
+                </form>
+            </div>
+        </nav>
+
+        <!-- Tabla -->
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">NOMBRE</th>
+                    <th scope="col">EMAIL</th>
+                    <th scope="col">ROL</th>
+                    <th scope="col">ESTADO</th>
+                    <th scope="col">OPCIONES</th>
+                </tr>
+            </thead>
+            <tbody id="tablaUsuarios">
+
+                <!-- Cargaremos los datos mediante API -->
+
+            </tbody>
+        </table>
+
+    </main>
+
+    <script src="assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+</body>
+
+</html>

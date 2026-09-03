@@ -1,5 +1,5 @@
 
-//  NAVBAR
+//  NAVBAR
 
 async function cargarNavbar() {
     const contenedor = document.getElementById("navbar-container");
@@ -23,10 +23,10 @@ async function cargarNavbar() {
     } catch (error) {
 
         contenedor.innerHTML = `
-            <div class="alert alert-danger">
-                No se pudo cargar la barra de navegación.
-            </div>
-        `;
+            <div class="alert alert-danger">
+                No se pudo cargar la barra de navegación.
+            </div>
+        `;
     }
 }
 
@@ -337,5 +337,161 @@ function mostrarInformacion(contenedor) {
 if (document.getElementById("mapa")) {
 
     cargarMapaContenedores();
+
+}
+
+
+
+/* ---------------------
+    USUARIOS
+--------------------- */
+
+// Busqueda/listado de usuarios
+
+const BusquedaUsuarios = document.getElementById("formBusquedaUsuarios");
+
+if (BusquedaUsuarios) {
+
+    BusquedaUsuarios.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const nombre = document.getElementById("inputNombre").value.trim();
+
+        let url = "../APIs_SIGERU/usuarios/routes/listarUsuarios.php";
+
+        if (nombre !== "") {
+            url += "?nombre=" + encodeURIComponent(nombre);
+        }
+
+        try {
+
+            const respuesta = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            const usuarios = await respuesta.json();
+
+            cargarTablaUsuarios(usuarios);
+
+        } catch (error) {
+
+            console.error("Error al cargar usuarios:", error);
+
+        }
+
+    });
+
+}
+
+
+function cargarTablaUsuarios(usuarios) {
+
+    const tabla = document.getElementById("tablaUsuarios");
+
+    if (!tabla) return;
+
+    tabla.innerHTML = "";
+
+    usuarios.forEach(usuario => {
+
+        tabla.innerHTML += `
+
+            <tr>
+
+                <th scope="row">${usuario.id}</th>
+
+                <td>${usuario.nombre}</td>
+
+                <td>${usuario.email}</td>
+
+                <td>${usuario.rol}</td>
+
+                <td>${usuario.estado}</td>
+
+                <td>
+
+                    <div class="list-group-horizontal">
+
+                        <button class="verDatos btn btn-outline-primary btn-sm">Ver</button>
+
+                        <button class="btn btn-outline-secondary btn-sm">Editar</button>
+
+                        <button class="btn btn-outline-danger btn-sm">Eliminar</button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+// Cargar usuarios al entrar a la página si existe la tabla
+if (document.getElementById("tablaUsuarios")) {
+
+    fetch("../APIs_SIGERU/usuarios/routes/listarUsuarios.php")
+        .then(res => res.json())
+        .then(data => cargarTablaUsuarios(data))
+        .catch(error => console.error(error));
+
+}
+
+
+// Envío del formulario de registro de usuario mediante fetch
+
+if (document.getElementById("formRegistroUsuario")) {
+
+    const formRegistro = document.getElementById("formRegistroUsuario");
+
+    formRegistro.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const nombre = document.getElementById("nombre").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const rol = document.getElementById("rol").value;
+
+        const parametros = "nombre=" + encodeURIComponent(nombre) +
+            "&email=" + encodeURIComponent(email) +
+            "&password=" + encodeURIComponent(password) +
+            "&rol=" + encodeURIComponent(rol);
+
+        fetch(formRegistro.action, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: parametros
+        })
+            .then(function (respuesta) {
+                return respuesta.json();
+            })
+            .then(function (resultado) {
+
+                if (resultado.success) {
+                    alert(resultado.mensaje);
+                    document.getElementById("nombre").value = "";
+                    document.getElementById("email").value = "";
+                    document.getElementById("password").value = "";
+                    document.getElementById("rol").value = "";
+                } else {
+                    alert("No se pudo registrar el usuario. Revise los datos.");
+                }
+
+            })
+            .catch(function (error) {
+                console.error("Error al enviar registro:", error);
+            });
+
+    });
 
 }

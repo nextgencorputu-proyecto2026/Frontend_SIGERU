@@ -14,7 +14,7 @@
 </head>
 
 <body class="d-flex flex-column">
-    
+
     <div id="navbar-container"></div>
 
     <main class="container">
@@ -29,7 +29,7 @@
                         </div>
 
                         <div class="card-body">
-                            <form id="formContenedor" method="POST" action="../Api/agregarContenedor.php">
+                            <form id="formContenedor" method="POST" action="http://127.0.0.1:8000/api/contenedores">
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
@@ -38,7 +38,7 @@
                                         </label>
 
                                         <input type="text" class="form-control" id="ubicacionX" name="ubicacionX"
-                                            placeholder="Ingrese la ubicación X" required>
+                                            placeholder="Ej: -56.1342" required>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -47,7 +47,7 @@
                                         </label>
 
                                         <input type="text" class="form-control" id="ubicacionY" name="ubicacionY"
-                                            placeholder="Ingrese la ubicación Y" required>
+                                            placeholder="Ej: -34.8981" required>
                                     </div>
                                 </div>
 
@@ -59,9 +59,9 @@
 
                                         <select class="form-select" id="estado" name="estado" required>
                                             <option value="" selected disabled> Seleccione estado</option>
-                                            <option value="Disponible">Disponible</option>
-                                            <option value="En mantenimiento"> En mantenimiento </option>
-                                            <option value="Fuera de servicio"> Fuera de servicio </option>
+                                            <option value="Funcional">Funcional</option>
+                                            <option value="Roto"> Roto </option>
+                                            <option value="Desbordado"> Desbordado </option>
                                         </select>
                                     </div>
 
@@ -86,8 +86,11 @@
 
                                     <select class="form-select" id="tipoResiduo" name="tipoResiduo" required>
                                         <option value="" selected disabled> Seleccione el tipo de residuo </option>
-                                        <option value="Reciclables">Reciclables</option>
-                                        <option value="Mezclados">Mezclados</option>
+                                        <option value="Domiciliario">Domiciliario</option>
+                                        <option value="Reciclable">Reciclable</option>
+                                        <option value="Organico">Organico</option>
+                                        <option value="Peligroso">Peligroso</option>
+                                        <option value="Voluminoso">Voluminoso</option>
                                     </select>
                                 </div>
 

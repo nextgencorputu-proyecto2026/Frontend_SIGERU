@@ -51,7 +51,7 @@ if (BusquedaCamiones) {
 
         const matricula = document.getElementById("inputMatricula").value.trim();
 
-        let url = "../APIs_SIGERU/getCamiones.php";
+        let url = "http://127.0.0.1:8000/api/camiones";
 
         if (matricula !== "") {
             url += "?matricula=" + matricula;
@@ -99,15 +99,15 @@ function cargarTabla(camiones) {
 
             <tr>
 
-                <th scope="row">${camion.id}</th>
-
-                <td>${camion.matricula}</td>
+                <th scope="row">${camion.idVehiculo}</th>
 
                 <td>${camion.tipo}</td>
 
-                <td>${camion.ruta}</td>
+                <td>${camion.capacidad}</td>
 
-                <td>${camion.estado}</td>
+                <td>-</td>
+
+                <td>-</td>
 
                 <td>
 
@@ -142,9 +142,9 @@ function cargarTabla(camiones) {
 }
 if (document.getElementById("tablaCamiones")) {
 
-    fetch("../APIs_SIGERU/getCamiones.php")
+    fetch("http://127.0.0.1:8000/api/camiones")
         .then(res => res.json())
-        .then(data => cargarTabla(data))
+        .then(data => cargarTabla(data.data))
         .catch(error => console.error(error));
 
 }
@@ -219,7 +219,7 @@ async function cargarMapaContenedores() {
 
 
         const respuesta = await fetch(
-            "../APIs_SIGERU/getContenedores.php",
+            "http://127.0.0.1:8000/api/contenedores",
             {
 
                 method: "GET",
@@ -240,7 +240,7 @@ async function cargarMapaContenedores() {
 
 
 
-        dibujarContenedores(contenedores);
+        dibujarContenedores(contenedores.data);
 
 
 
@@ -273,11 +273,8 @@ function dibujarContenedores(contenedores) {
 
 
         const marcador = L.marker([
-
-            contenedor.Ubi_Y,
-
-            contenedor.Ubi_X
-
+            contenedor.UbicacionY,
+            contenedor.UbicacionX
         ]);
 
 
@@ -315,17 +312,12 @@ function mostrarInformacion(contenedor) {
 
 
 
-    document.getElementById("id").value = contenedor.ID;
-
-    document.getElementById("Nv_Llenado").value = contenedor.Nv_Llenado;
-
-    document.getElementById("ubiX").value = contenedor.Ubi_X;
-
-    document.getElementById("ubiY").value = contenedor.Ubi_Y;
-
-    document.getElementById("Ruta").value = contenedor.Ruta;
-
-    document.getElementById("Tipo_Residuo").value = contenedor.Tipo_Residuo;
+    document.getElementById("id").value = contenedor.idContenedor;
+    document.getElementById("Nv_Llenado").value = contenedor.nivelLlenado;
+    document.getElementById("ubiX").value = contenedor.UbicacionX;
+    document.getElementById("ubiY").value = contenedor.UbicacionY;
+    document.getElementById("Ruta").value = contenedor.idRuta;
+    document.getElementById("Tipo_Residuo").value = contenedor.tipoResiduo;
 
 
 }
@@ -358,7 +350,7 @@ if (BusquedaUsuarios) {
 
         const nombre = document.getElementById("inputNombre").value.trim();
 
-        let url = "../APIs_SIGERU/usuarios/routes/listarUsuarios.php";
+        let url = "http://127.0.0.1:8000/api/usuarios";
 
         if (nombre !== "") {
             url += "?nombre=" + encodeURIComponent(nombre);
@@ -373,9 +365,9 @@ if (BusquedaUsuarios) {
                 }
             });
 
-            const usuarios = await respuesta.json();
+            const resultado = await respuesta.json();
 
-            cargarTablaUsuarios(usuarios);
+            cargarTablaUsuarios(resultado.data);
 
         } catch (error) {
 
@@ -402,15 +394,17 @@ function cargarTablaUsuarios(usuarios) {
 
             <tr>
 
-                <th scope="row">${usuario.id}</th>
+                <th scope="row">${usuario.idUsu}</th>
 
-                <td>${usuario.nombre}</td>
+                <td>${usuario.nombre1}</td>
 
-                <td>${usuario.email}</td>
+                <td>${usuario.apellido1}</td>
 
-                <td>${usuario.rol}</td>
+                <td>-</td>
 
-                <td>${usuario.estado}</td>
+                <td>-</td>
+
+                <td>-</td>
 
                 <td>
 
@@ -437,9 +431,9 @@ function cargarTablaUsuarios(usuarios) {
 // Cargar usuarios al entrar a la página si existe la tabla
 if (document.getElementById("tablaUsuarios")) {
 
-    fetch("../APIs_SIGERU/usuarios/routes/listarUsuarios.php")
+    fetch("http://127.0.0.1:8000/api/usuarios")
         .then(res => res.json())
-        .then(data => cargarTablaUsuarios(data))
+        .then(data => cargarTablaUsuarios(data.data))
         .catch(error => console.error(error));
 
 }
@@ -455,15 +449,23 @@ if (document.getElementById("formRegistroUsuario")) {
 
         e.preventDefault();
 
-        const nombre = document.getElementById("nombre").value;
+        const ci = document.getElementById("ci").value;
+        const nombre1 = document.getElementById("nombre1").value;
+        const nombre2 = document.getElementById("nombre2").value;
+        const apellido1 = document.getElementById("apellido1").value;
+        const apellido2 = document.getElementById("apellido2").value;
+        const fec_nac = document.getElementById("fec_nac").value;
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
-        const rol = document.getElementById("rol").value;
 
-        const parametros = "nombre=" + encodeURIComponent(nombre) +
+        const parametros = "ci=" + encodeURIComponent(ci) +
+            "&nombre1=" + encodeURIComponent(nombre1) +
+            "&nombre2=" + encodeURIComponent(nombre2) +
+            "&apellido1=" + encodeURIComponent(apellido1) +
+            "&apellido2=" + encodeURIComponent(apellido2) +
+            "&fec_nac=" + encodeURIComponent(fec_nac) +
             "&email=" + encodeURIComponent(email) +
-            "&password=" + encodeURIComponent(password) +
-            "&rol=" + encodeURIComponent(rol);
+            "&password=" + encodeURIComponent(password);
 
         fetch(formRegistro.action, {
             method: "POST",
@@ -477,12 +479,16 @@ if (document.getElementById("formRegistroUsuario")) {
             })
             .then(function (resultado) {
 
-                if (resultado.success) {
-                    alert(resultado.mensaje);
-                    document.getElementById("nombre").value = "";
+                if (resultado.data) {
+                    alert("Usuario registrado correctamente");
+                    document.getElementById("ci").value = "";
+                    document.getElementById("nombre1").value = "";
+                    document.getElementById("nombre2").value = "";
+                    document.getElementById("apellido1").value = "";
+                    document.getElementById("apellido2").value = "";
+                    document.getElementById("fec_nac").value = "";
                     document.getElementById("email").value = "";
                     document.getElementById("password").value = "";
-                    document.getElementById("rol").value = "";
                 } else {
                     alert("No se pudo registrar el usuario. Revise los datos.");
                 }
@@ -493,5 +499,111 @@ if (document.getElementById("formRegistroUsuario")) {
             });
 
     });
+}
 
+/* ---------------------
+LOGIN
+--------------------- */
+
+if (document.getElementById("formLogin")) {
+
+    const formLogin = document.getElementById("formLogin");
+
+    formLogin.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const email = document.getElementById("Email").value;
+        const password = document.getElementById("Password").value;
+
+        const parametros = "email=" + encodeURIComponent(email) +
+            "&password=" + encodeURIComponent(password);
+
+        fetch(formLogin.action, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            },
+            body: parametros
+        })
+            .then(function (respuesta) {
+                return respuesta.json();
+            })
+            .then(function (resultado) {
+
+                if (resultado.success) {
+                    window.location.href = "home.html";
+                } else {
+                    alert(resultado.mensaje);
+                }
+
+            })
+            .catch(function (error) {
+                console.error("Error al iniciar sesion:", error);
+            });
+
+    });
+    /* ---------------------
+        ALTA CONTENEDOR
+    --------------------- */
+
+    if (document.getElementById("formContenedor")) {
+
+        const formContenedor = document.getElementById("formContenedor");
+
+        formContenedor.addEventListener("submit", function (e) {
+
+            e.preventDefault();
+
+            const ubicacionX = document.getElementById("ubicacionX").value;
+            const ubicacionY = document.getElementById("ubicacionY").value;
+            const estado = document.getElementById("estado").value;
+            const nivelLlenado = document.getElementById("nivelLlenado").value;
+            const tipoResiduo = document.getElementById("tipoResiduo").value;
+            const idRuta = document.getElementById("idRuta").value;
+
+            const parametros = "UbicacionX=" + encodeURIComponent(ubicacionX) +
+                "&UbicacionY=" + encodeURIComponent(ubicacionY) +
+                "&Estado=" + encodeURIComponent(estado) +
+                "&nivelLlenado=" + encodeURIComponent(nivelLlenado) +
+                "&tipoResiduo=" + encodeURIComponent(tipoResiduo) +
+                "&idRuta=" + encodeURIComponent(idRuta);
+
+            fetch(formContenedor.action, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
+                body: parametros
+            })
+                .then(function (respuesta) {
+                    return respuesta.json();
+                })
+                .then(function (resultado) {
+
+
+                    if (resultado.data) {
+                        alert("Contenedor agregado correctamente");
+                        document.getElementById("ubicacionX").value = "";
+                        document.getElementById("ubicacionY").value = "";
+                        document.getElementById("estado").value = "";
+                        document.getElementById("nivelLlenado").value = "";
+                        document.getElementById("tipoResiduo").value = "";
+                        document.getElementById("idRuta").value = "";
+                    } else {
+                        alert("No se pudo agregar el contenedor. Revise los datos.");
+                    }
+
+                })
+                .catch(function (error) {
+                    console.error("Error al agregar contenedor:", error);
+                });
+
+        });
+
+
+
+    }
 }

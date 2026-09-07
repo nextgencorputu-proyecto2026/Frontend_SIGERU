@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registrar Maquinaria</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        crossorigin="anonymous">
+
+    <!-- CSS del proyecto -->
+    <link rel="stylesheet" href="./assets/style.css">
+
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <div id="navbar-container"></div>
+
+    <main class="container">
+
+        <div class="container py-4">
+
+            <!-- Título -->
+            <div class="text-center mb-4">
+
+                <h1>Registrar Maquinaria</h1>
+
+                <h5>
+                    Alta de maquinaria básica
+                </h5>
+
+            </div>
+
+            <!-- Formulario -->
+            <div class="card shadow mx-auto" style="max-width: 700px;">
+
+                <div class="card-header bg-success text-white">
+
+                    <h2 class="h5 mb-0">
+                        Datos de la maquinaria
+                    </h2>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form id="formMaquinaria">
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+
+                            <label for="nombreMaquinaria" class="form-label">
+                                Nombre
+                            </label>
+
+                            <input type="text"
+                                id="nombreMaquinaria"
+                                class="form-control"
+                                required>
+
+                        </div>
+
+                        <!-- Tipo -->
+                        <div class="mb-3">
+
+                            <label for="tipoMaquinaria" class="form-label">
+                                Tipo
+                            </label>
+
+                            <select id="tipoMaquinaria"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    Seleccione un tipo
+                                </option>
+
+                                <option value="Aplanadora">
+                                    Aplanadora
+                                </option>
+
+                                <option value="Bobcat">
+                                    Bobcat
+                                </option>
+
+                                <option value="Retroexcavadora">
+                                    Retroexcavadora
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="mb-3">
+
+                            <label for="estadoMaquinaria" class="form-label">
+                                Estado
+                            </label>
+
+                            <select id="estadoMaquinaria"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    Seleccione un estado
+                                </option>
+
+                                <option value="Disponible">
+                                    Disponible
+                                </option>
+
+                                <option value="Inhabilitado">
+                                    Inhabilitado
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Centro -->
+                        <div class="mb-3">
+
+                            <label for="idCentroMaquinaria" class="form-label">
+                                Centro
+                            </label>
+
+                            <select id="idCentroMaquinaria"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    Seleccione un centro
+                                </option>
+
+                                <option value="2">
+                                    Centro Maquinaria
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="text-center">
+
+                            <button type="submit"
+                                class="btn btn-success">
+
+                                Registrar maquinaria
+
+                            </button>
+
+                            <a href="listaMaquinaria.html"
+                                class="btn btn-secondary">
+
+                                Cancelar
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- JavaScript del proyecto -->
+    <script src="assets/script.js"></script>
+
+</body>
+
+</html>

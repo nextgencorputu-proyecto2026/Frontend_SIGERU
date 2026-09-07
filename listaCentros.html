@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lista de Centros</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+
+    <!-- CSS del proyecto -->
+    <link rel="stylesheet" href="./assets/style.css">
+
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <div id="navbar-container"></div>
+
+    <main class="container">
+
+        <div class="container py-4">
+
+            <!-- Título -->
+            <div class="text-center mb-4">
+
+                <h1>Centros de Acopio</h1>
+
+                <h5>
+                    Gestión de centros de acopio y otros centros
+                </h5>
+
+            </div>
+
+            <!-- Buscador y botón de alta -->
+            <div class="row mb-4">
+
+                <div class="col-md-8 mb-2">
+
+                    <input type="text" id="buscarCentro" class="form-control" placeholder="Buscar centro por nombre...">
+
+                </div>
+
+                <div class="col-md-4 text-md-end">
+
+                    <a href="altaCentros.html" class="btn btn-primary">
+
+                        Registrar Centro
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- Tabla -->
+            <div class="card shadow">
+
+                <div class="card-header bg-success text-white">
+
+                    <h2 class="h5 mb-0">
+                        Lista de Centros
+                    </h2>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped table-hover align-middle">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Dirección</th>
+                                    <th>Capacidad</th>
+                                    <th>Tipo</th>
+                                    <th>Ubicación X</th>
+                                    <th>Ubicación Y</th>
+                                    <th>Acciones</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="tablaCentros">
+
+                                <!--
+                                    Los centros se cargarán
+                                    desde JavaScript
+                                -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal para ver los datos -->
+    <div class="modal fade" id="datosCentro" tabindex="-1" aria-hidden="true">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Datos del Centro
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+
+                        <label for="verNombreCentro" class="form-label">
+                            Nombre
+                        </label>
+
+                        <input type="text" id="verNombreCentro" class="form-control" disabled>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label for="verDireccionCentro" class="form-label">
+                            Dirección
+                        </label>
+
+                        <input type="text" id="verDireccionCentro" class="form-control" disabled>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label for="verCapacidadCentro" class="form-label">
+                            Capacidad
+                        </label>
+
+                        <input type="number" id="verCapacidadCentro" class="form-control" disabled min="0" step="0.01">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label for="verTipoCentro" class="form-label">
+                            Tipo
+                        </label>
+
+                        <select id="verTipoCentro" class="form-select" disabled>
+
+                            <option value="Central Operativa">
+                                Central Operativa
+                            </option>
+
+                            <option value="Centro de acopio">
+                                Centro de acopio
+                            </option>
+
+                            <option value="Punto de depósito">
+                                Punto de depósito
+                            </option>
+
+                            <option value="Vertedero">
+                                Vertedero
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label for="verUbicacionX" class="form-label">
+                            Ubicación X
+                        </label>
+
+                        <input type="number" id="verUbicacionX" class="form-control" disabled step="any">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label for="verUbicacionY" class="form-label">
+                            Ubicación Y
+                        </label>
+
+                        <input type="number" id="verUbicacionY" class="form-control" disabled step="any">
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+
+                        Cerrar
+
+                    </button>
+
+                    <button type="button" id="btnGuardarCentro" class="btn btn-success d-none">
+
+                        Guardar cambios
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
+    </script>
+
+    <!-- JavaScript del proyecto -->
+    <script src="assets/script.js"></script>
+
+</body>
+
+</html>

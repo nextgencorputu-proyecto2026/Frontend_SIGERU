@@ -68,7 +68,13 @@
                             </div>
                             <div class="form-group">
                                 <label for="tipo">Tipo:</label>
-                                <input type="text" class="datos form-control" id="tipo" readonly>
+                                <select class="datos form-select" id="tipo" disabled>
+                                    <option value="Camión recolector mixtos">Camión recolector mixtos</option>
+                                    <option value="Camión recolector reciclables">Camión recolector reciclables</option>
+                                    <option value="Camión de traslado">Camión de traslado</option>
+                                    <option value="Camioneta">Camioneta</option>
+                                    <option value="Barredora">Barredora</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="ruta">Ruta Asignada:</label>
@@ -76,7 +82,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="estado">Estado:</label>
-                                <input type="text" class="datos form-control" id="estado" readonly>
+                                <select class="datos form-select" id="estado" disabled>
+                                    <option value="Disponible">Disponible</option>
+                                    <option value="En mantenimiento">En mantenimiento</option>
+                                    <option value="Inhabilitado">Inhabilitado</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="capacidad">Capacidad:</label>
@@ -85,7 +95,9 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="guardar btn btn-primary d-none">Guardar</button>
+                            <button type="button" id="btnGuardarCamion" class="guardar btn btn-primary d-none">
+                                Guardar
+                            </button>
                         </div>
                     </div>
                 </div>

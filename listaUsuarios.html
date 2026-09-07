@@ -50,6 +50,83 @@
 
             </tbody>
         </table>
+        <!-- Modal datos del usuario -->
+        <div class="modal fade" id="datosUsuarios" tabindex="-1" aria-labelledby="datosUsuariosLabel"
+            aria-hidden="true">
+
+            <div class="modal-dialog">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="datosUsuariosLabel">
+                            Datos del usuario
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="form-group mb-3">
+                            <label for="ciUsuario">CI:</label>
+                            <input type="text" class="datos form-control" id="ciUsuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="nombre1Usuario">Primer nombre:</label>
+                            <input type="text" class="datos form-control" id="nombre1Usuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="nombre2Usuario">Segundo nombre:</label>
+                            <input type="text" class="datos form-control" id="nombre2Usuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="apellido1Usuario">Primer apellido:</label>
+                            <input type="text" class="datos form-control" id="apellido1Usuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="apellido2Usuario">Segundo apellido:</label>
+                            <input type="text" class="datos form-control" id="apellido2Usuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="fecNacUsuario">Fecha de nacimiento:</label>
+                            <input type="text" class="datos form-control" id="fecNacUsuario" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="tipoUsuario">Rol:</label>
+                            <input type="text" class="datos form-control" id="tipoUsuario" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="centroUsuario">Centro:</label>
+                            <input type="text" class="datos form-control" id="centroUsuario" readonly>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        
+                        <button type="button" id="btnGuardarUsuario" class="btn btn-primary d-none">
+                            Guardar
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
     </main>
 

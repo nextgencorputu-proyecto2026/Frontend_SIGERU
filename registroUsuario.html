@@ -28,7 +28,7 @@
                         </div>
 
                         <div class="card-body">
-                            <form id="formRegistroUsuario" method="POST" action="http://127.0.0.1:8000/api/usuarios">
+                            <form id="formRegistroUsuario" method="POST" action="http://localhost:8000/api/usuarios">
 
                                 <div class="mb-3">
                                     <label for="ci" class="form-label">Cédula</label>
@@ -63,6 +63,22 @@
                                 <div class="mb-3">
                                     <label for="fec_nac" class="form-label">Fecha de nacimiento</label>
                                     <input type="date" class="form-control" id="fec_nac" name="fec_nac" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tipo" class="form-label">Rol</label>
+                                    <select class="form-select" id="tipo" name="tipo" required>
+                                        <option value="">Seleccione un rol</option>
+                                        <option value="Administrador">Administrador</option>
+                                        <option value="Operario">Operario</option>
+                                        <option value="Chofer">Chofer</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="idCentro" class="form-label">Centro</label>
+                                    <select class="form-select" id="idCentro" name="idCentro" required>
+                                        <option value="">Seleccione un centro</option>
+                                        <option value="2">Centro Maquinaria</option>
+                                    </select>
                                 </div>
 
                                 <div class="mb-3">

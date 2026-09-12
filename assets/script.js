@@ -1,4 +1,79 @@
+/* ---------------------
+    CONFIGURACIÓN JWT
+--------------------- */
 
+// Clave donde guardamos el token
+const TOKEN_KEY = "access_token";
+
+// Obtener el token guardado
+function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+// Guardar el token
+function saveToken(token) {
+    localStorage.setItem(TOKEN_KEY, token);
+}
+
+// Eliminar el token
+function removeToken() {
+    localStorage.removeItem(TOKEN_KEY);
+}
+
+// Si Laravel responde 401, el token venció o no es válido
+function handleUnauthorized(respuesta) {
+
+    if (respuesta.status === 401) {
+
+        removeToken();
+
+        window.location.href = "login.html";
+
+        return true;
+    }
+
+    return false;
+}
+
+
+/* ---------------------
+    CONTROL GENERAL DE 401
+--------------------- */
+
+// Guardamos el fetch original del navegador
+const fetchOriginal = window.fetch.bind(window);
+
+// Controlamos automáticamente las respuestas de los fetch
+window.fetch = async function (recurso, opciones = {}) {
+
+    const respuesta = await fetchOriginal(recurso, opciones);
+
+    // Revisamos si esta petición llevaba Authorization
+    let tieneAuthorization = false;
+
+    if (opciones.headers) {
+
+        if (opciones.headers instanceof Headers) {
+
+            tieneAuthorization =
+                opciones.headers.has("Authorization");
+
+        } else {
+
+            tieneAuthorization =
+                Object.keys(opciones.headers).some(
+                    clave => clave.toLowerCase() === "authorization"
+                );
+        }
+    }
+
+    // Solo controlamos el 401 de peticiones protegidas
+    if (tieneAuthorization) {
+        handleUnauthorized(respuesta);
+    }
+
+    return respuesta;
+};
 //  NAVBAR
 
 async function cargarNavbar() {
@@ -38,8 +113,7 @@ document.addEventListener("DOMContentLoaded", cargarNavbar);
     CAMIONES
 --------------------- */
 
-//   JS para API
-
+// JS para API
 
 const BusquedaCamiones = document.getElementById("formBusquedaCamiones");
 
@@ -62,7 +136,8 @@ if (BusquedaCamiones) {
             const respuesta = await fetch(url, {
                 method: "GET",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + getToken()
                 }
             });
 
@@ -109,27 +184,27 @@ function cargarTabla(camiones) {
 
                 <td>
 
-                   <div class="list-group-horizontal">
+                    <div class="list-group-horizontal">
 
-    <button 
-        class="verDatos btn btn-outline-primary btn-sm"
-        data-id="${camion.idVehiculo}"
-        data-bs-toggle="modal" 
-        data-bs-target="#datosCamiones">
-        Ver
-    </button>
+                        <button 
+                            class="verDatos btn btn-outline-primary btn-sm"
+                            data-id="${camion.idVehiculo}"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#datosCamiones">
+                            Ver
+                        </button>
 
-    <button class="btn btn-outline-secondary btn-sm">
-        Editar
-    </button>
+                        <button class="btn btn-outline-secondary btn-sm">
+                            Editar
+                        </button>
 
-    <button 
-        class="btn btn-outline-danger btn-sm eliminarCamion"
-        data-id="${camion.idVehiculo}">
-        Eliminar
-    </button>
+                        <button 
+                            class="btn btn-outline-danger btn-sm eliminarCamion"
+                            data-id="${camion.idVehiculo}">
+                            Eliminar
+                        </button>
 
-</div>
+                    </div>
 
                 </td>
 
@@ -141,18 +216,46 @@ function cargarTabla(camiones) {
 
 }
 
+
+// Cargar lista de camiones al entrar a la pagina
+
 if (document.getElementById("tablaCamiones")) {
 
     fetch("http://localhost:8000/api/camiones", {
         method: "GET",
-        credentials: "include",
         headers: {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Authorization": "Bearer " + getToken()
         }
     })
-        .then(res => res.json())
-        .then(data => cargarTabla(data.data))
-        .catch(error => console.error(error));
+        .then(function (respuesta) {
+
+            if (respuesta.status === 403) {
+
+                alert("No tiene permisos para acceder a Camiones");
+
+                window.location.href = "home.html";
+
+                return null;
+            }
+
+            return respuesta.json();
+
+        })
+        .then(function (data) {
+
+            if (!data) {
+                return;
+            }
+
+            cargarTabla(data.data);
+
+        })
+        .catch(function (error) {
+
+            console.error("Error al cargar camiones:", error);
+
+        });
 
 }
 /* ---------------------
@@ -171,9 +274,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/camiones/" + id,
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -222,9 +325,9 @@ document.addEventListener("click", function (e) {
 
         fetch("http://localhost:8000/api/camiones/" + id, {
             method: "GET",
-            credentials: "include",
             headers: {
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Authorization": "Bearer " + getToken()
             }
         })
             .then(respuesta => respuesta.json())
@@ -294,10 +397,10 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/camiones/" + id,
                 {
                     method: "PUT",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         matricula: matricula,
@@ -370,9 +473,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/camiones/" + id,
                 {
                     method: "DELETE",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -432,10 +535,10 @@ if (formCentro) {
                 "http://localhost:8000/api/centros-acopio",
                 {
                     method: "POST",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         nombre: nombre,
@@ -562,11 +665,10 @@ if (document.getElementById("tablaCentros")) {
 
         method: "GET",
 
-        credentials: "include",
-
         headers: {
 
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Authorization": "Bearer " + getToken()
 
         }
 
@@ -611,9 +713,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/centros-acopio/" + id,
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -676,9 +778,9 @@ document.addEventListener("click", function (e) {
             "http://localhost:8000/api/centros-acopio/" + id,
             {
                 method: "GET",
-                credentials: "include",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + getToken()
                 }
             }
         )
@@ -772,10 +874,10 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/centros-acopio/" + id,
                 {
                     method: "PUT",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         nombre: nombre,
@@ -846,9 +948,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/centros-acopio/" + id,
                 {
                     method: "DELETE",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -899,9 +1001,9 @@ if (buscarCentro) {
                 "http://localhost:8000/api/centros-acopio",
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -978,9 +1080,9 @@ async function cargarMapaContenedores() {
             "http://localhost:8000/api/contenedores",
             {
                 method: "GET",
-                credentials: "include",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + getToken()
                 }
             }
         );
@@ -1068,6 +1170,192 @@ if (document.getElementById("mapa")) {
 
 }
 
+/* ---------------------
+    LISTAR CONTENEDORES
+--------------------- */
+
+function cargarTablaContenedores(contenedores) {
+
+    const tabla = document.getElementById("tablaContenedores");
+
+    if (!tabla) {
+        return;
+    }
+
+    tabla.innerHTML = "";
+
+    contenedores.forEach(function (contenedor) {
+
+        tabla.innerHTML += `
+
+            <tr>
+
+                <th scope="row">${contenedor.idContenedor}</th>
+
+                <td>${contenedor.tipo}</td>
+
+                <td>${contenedor.estado ?? "-"}</td>
+
+                <td>${contenedor.nivelLlenado ?? "-"}</td>
+
+                <td>${contenedor.ubicacionX}</td>
+
+                <td>${contenedor.ubicacionY}</td>
+
+                <td>${contenedor.idRuta ?? "-"}</td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+
+// Cargar contenedores al entrar a la página
+
+if (document.getElementById("tablaContenedores")) {
+
+    fetch("http://localhost:8000/api/contenedores", {
+
+        method: "GET",
+
+        headers: {
+
+            "Accept": "application/json",
+
+            "Authorization": "Bearer " + getToken()
+
+        }
+
+    })
+        .then(function (respuesta) {
+
+            if (respuesta.status === 403) {
+
+                alert("No tiene permisos para acceder a Contenedores");
+
+                window.location.href = "home.html";
+
+                return null;
+            }
+
+            return respuesta.json();
+
+        })
+        .then(function (resultado) {
+
+            if (!resultado) {
+                return;
+            }
+
+            cargarTablaContenedores(resultado.data);
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                "Error al cargar contenedores:",
+                error
+            );
+
+        });
+
+}
+
+
+// Buscar contenedores
+
+const BusquedaContenedores =
+    document.getElementById("formBusquedaContenedores");
+
+
+if (BusquedaContenedores) {
+
+    BusquedaContenedores.addEventListener(
+        "submit",
+        async function (e) {
+
+            e.preventDefault();
+
+            const id =
+                document
+                    .getElementById("inputIdContenedor")
+                    .value
+                    .trim();
+
+            try {
+
+                const respuesta = await fetch(
+                    "http://localhost:8000/api/contenedores",
+                    {
+                        method: "GET",
+
+                        headers: {
+
+                            "Accept": "application/json",
+
+                            "Authorization":
+                                "Bearer " + getToken()
+
+                        }
+                    }
+                );
+
+                if (respuesta.status === 403) {
+
+                    alert(
+                        "No tiene permisos para acceder a Contenedores"
+                    );
+
+                    window.location.href = "home.html";
+
+                    return;
+                }
+
+                const resultado =
+                    await respuesta.json();
+
+
+                let contenedores =
+                    resultado.data;
+
+
+                if (id !== "") {
+
+                    contenedores =
+                        contenedores.filter(
+                            function (contenedor) {
+
+                                return String(
+                                    contenedor.idContenedor
+                                ) === id;
+
+                            }
+                        );
+
+                }
+
+
+                cargarTablaContenedores(
+                    contenedores
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error al buscar contenedores:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+}
 
 
 /* ---------------------
@@ -1096,9 +1384,9 @@ if (BusquedaUsuarios) {
 
             const respuesta = await fetch(url, {
                 method: "GET",
-                credentials: "include",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + getToken()
                 }
             });
 
@@ -1179,19 +1467,48 @@ function cargarTablaUsuarios(usuarios) {
 
 }
 
+
 // Cargar usuarios al entrar a la página si existe la tabla
+
 if (document.getElementById("tablaUsuarios")) {
 
     fetch("http://localhost:8000/api/usuarios", {
         method: "GET",
-        credentials: "include",
         headers: {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Authorization": "Bearer " + getToken()
         }
     })
-        .then(res => res.json())
-        .then(data => cargarTablaUsuarios(data.data))
-        .catch(error => console.error(error));
+        .then(function (respuesta) {
+
+            // Si el usuario no tiene permiso para acceder a Usuarios
+            if (respuesta.status === 403) {
+
+                alert("No tiene permisos para acceder a Usuarios");
+
+                window.location.href = "home.html";
+
+                return null;
+            }
+
+            return respuesta.json();
+
+        })
+        .then(function (data) {
+
+            // Si hubo un 403, no intentamos cargar la tabla
+            if (!data) {
+                return;
+            }
+
+            cargarTablaUsuarios(data.data);
+
+        })
+        .catch(function (error) {
+
+            console.error("Error al cargar usuarios:", error);
+
+        });
 
 }
 
@@ -1230,10 +1547,10 @@ if (document.getElementById("formRegistroUsuario")) {
 
         fetch(formRegistro.action, {
             method: "POST",
-            credentials: "include",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Authorization": "Bearer " + getToken()
             },
             body: parametros
         })
@@ -1243,7 +1560,9 @@ if (document.getElementById("formRegistroUsuario")) {
             .then(function (resultado) {
 
                 if (resultado.data) {
+
                     alert("Usuario registrado correctamente");
+
                     document.getElementById("ci").value = "";
                     document.getElementById("nombre1").value = "";
                     document.getElementById("nombre2").value = "";
@@ -1252,16 +1571,22 @@ if (document.getElementById("formRegistroUsuario")) {
                     document.getElementById("fec_nac").value = "";
                     document.getElementById("email").value = "";
                     document.getElementById("password").value = "";
+
                 } else {
+
                     alert("No se pudo registrar el usuario. Revise los datos.");
+
                 }
 
             })
             .catch(function (error) {
+
                 console.error("Error al enviar registro:", error);
+
             });
 
     });
+
 }
 /* ---------------------
     VER USUARIO
@@ -1279,9 +1604,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/usuarios/" + id,
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -1334,9 +1659,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/usuarios/" + id,
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -1417,10 +1742,10 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/usuarios/" + id,
                 {
                     method: "PUT",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         ci: ci,
@@ -1504,9 +1829,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/usuarios/" + id,
                 {
                     method: "DELETE",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -1539,7 +1864,7 @@ document.addEventListener("click", async function (e) {
 
 });
 /* ---------------------
-LOGIN
+    LOGIN JWT
 --------------------- */
 
 if (document.getElementById("formLogin")) {
@@ -1553,35 +1878,54 @@ if (document.getElementById("formLogin")) {
         const email = document.getElementById("Email").value;
         const password = document.getElementById("Password").value;
 
-        const parametros = "email=" + encodeURIComponent(email) +
-            "&password=" + encodeURIComponent(password);
-
         fetch(formLogin.action, {
+
             method: "POST",
-            credentials: "include",
+
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/json",
                 "Accept": "application/json"
             },
-            body: parametros
+
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+
         })
             .then(function (respuesta) {
                 return respuesta.json();
             })
             .then(function (resultado) {
 
-                if (resultado.success) {
+                if (resultado.data && resultado.data.access_token) {
+
+                    // Guardamos el JWT recibido desde Laravel
+                    saveToken(resultado.data.access_token);
+
+                    // Entramos al sistema
                     window.location.href = "home.html";
+
                 } else {
-                    alert(resultado.mensaje);
+
+                    alert(
+                        resultado.message ||
+                        "Email o contraseña incorrectos"
+                    );
+
                 }
 
             })
             .catch(function (error) {
-                console.error("Error al iniciar sesion:", error);
+
+                console.error("Error al iniciar sesión:", error);
+
+                alert("Error al iniciar sesión");
+
             });
 
     });
+
 }
 /* ---------------------
     ALTA CONTENEDOR
@@ -1611,10 +1955,10 @@ if (document.getElementById("formContenedor")) {
 
         fetch(formContenedor.action, {
             method: "POST",
-            credentials: "include",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Authorization": "Bearer " + getToken()
             },
             body: parametros
         })
@@ -1622,7 +1966,6 @@ if (document.getElementById("formContenedor")) {
                 return respuesta.json();
             })
             .then(function (resultado) {
-
 
                 if (resultado.data) {
                     alert("Contenedor agregado correctamente");
@@ -1643,8 +1986,6 @@ if (document.getElementById("formContenedor")) {
             });
 
     });
-
-
 
 }
 /* ---------------------
@@ -1688,10 +2029,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     "http://localhost:8000/api/contenedores/" + id,
                     {
                         method: "PUT",
-                        credentials: "include",
                         headers: {
                             "Content-Type": "application/json",
-                            "Accept": "application/json"
+                            "Accept": "application/json",
+                            "Authorization": "Bearer " + getToken()
                         },
                         body: JSON.stringify({
                             ubicacionX: ubicacionX,
@@ -1766,9 +2107,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     "http://localhost:8000/api/contenedores/" + id,
                     {
                         method: "DELETE",
-                        credentials: "include",
                         headers: {
-                            "Accept": "application/json"
+                            "Accept": "application/json",
+                            "Authorization": "Bearer " + getToken()
                         }
                     }
                 );
@@ -1828,10 +2169,10 @@ if (document.getElementById("formCamion")) {
                 "http://localhost:8000/api/camiones",
                 {
                     method: "POST",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         matricula: matricula,
@@ -1890,10 +2231,10 @@ if (formMaquinaria) {
                 "http://localhost:8000/api/maquinarias",
                 {
                     method: "POST",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         nombre: nombre,
@@ -2023,9 +2364,9 @@ if (document.getElementById("tablaMaquinarias")) {
         "http://localhost:8000/api/maquinarias",
         {
             method: "GET",
-            credentials: "include",
             headers: {
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Authorization": "Bearer " + getToken()
             }
         }
     )
@@ -2072,9 +2413,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/maquinarias/" + id,
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -2131,9 +2472,9 @@ document.addEventListener("click", function (e) {
             "http://localhost:8000/api/maquinarias/" + id,
             {
                 method: "GET",
-                credentials: "include",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + getToken()
                 }
             }
         )
@@ -2226,10 +2567,10 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/maquinarias/" + id,
                 {
                     method: "PUT",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     },
                     body: JSON.stringify({
                         nombre: nombre,
@@ -2301,9 +2642,9 @@ document.addEventListener("click", async function (e) {
                 "http://localhost:8000/api/maquinarias/" + id,
                 {
                     method: "DELETE",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );
@@ -2357,9 +2698,9 @@ if (buscarMaquinaria) {
                 "http://localhost:8000/api/maquinarias",
                 {
                     method: "GET",
-                    credentials: "include",
                     headers: {
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
                 }
             );

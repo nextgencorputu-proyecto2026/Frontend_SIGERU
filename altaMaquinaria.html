@@ -62,7 +62,9 @@
 
                             <input type="text"
                                 id="nombreMaquinaria"
+                                name="nombre"
                                 class="form-control"
+                                maxlength="60"
                                 required>
 
                         </div>
@@ -75,6 +77,7 @@
                             </label>
 
                             <select id="tipoMaquinaria"
+                                name="tipo"
                                 class="form-select"
                                 required>
 
@@ -106,6 +109,7 @@
                             </label>
 
                             <select id="estadoMaquinaria"
+                                name="estado"
                                 class="form-select"
                                 required>
 
@@ -133,6 +137,7 @@
                             </label>
 
                             <select id="idCentroMaquinaria"
+                                name="idCentro"
                                 class="form-select"
                                 required>
 
@@ -140,11 +145,8 @@
                                     Seleccione un centro
                                 </option>
 
-                                <option value="2">
-                                    Centro Maquinaria
-                                </option>
-
                             </select>
+                            <div id="mensajeCentrosMaquinaria" class="form-text"></div>
 
                         </div>
 

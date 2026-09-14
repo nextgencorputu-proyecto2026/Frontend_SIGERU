@@ -37,8 +37,8 @@
                                             Ubicación X
                                         </label>
 
-                                        <input type="text" class="form-control" id="ubicacionX" name="ubicacionX"
-                                            placeholder="Ej: -56.1342" required>
+                                        <input type="number" class="form-control" id="ubicacionX" name="ubicacionX"
+                                            placeholder="Ej: -56.1342" min="-99.9999" max="99.9999" step="0.0001" required>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -46,8 +46,8 @@
                                             Ubicación Y
                                         </label>
 
-                                        <input type="text" class="form-control" id="ubicacionY" name="ubicacionY"
-                                            placeholder="Ej: -34.8981" required>
+                                        <input type="number" class="form-control" id="ubicacionY" name="ubicacionY"
+                                            placeholder="Ej: -34.8981" min="-99.9999" max="99.9999" step="0.0001" required>
                                     </div>
                                 </div>
 
@@ -72,7 +72,7 @@
 
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="nivelLlenado"
-                                                name="nivelLlenado" required>
+                                                name="nivelLlenado" value="0" min="0" max="0" readonly required>
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
@@ -97,13 +97,10 @@
                                         Ruta asignada
                                     </label>
 
-                                    <select class="form-select" id="idRuta" name="idRuta" required>
-                                        <option value="" selected disabled> Seleccione una ruta </option>
-
-                                        <option value="1">Ruta 1</option>
-                                        <option value="2">Ruta 2</option>
-                                        <option value="3">Ruta 3</option>
+                                    <select class="form-select" id="idRuta" name="idRuta">
+                                        <option value="" selected>Sin ruta asignada</option>
                                     </select>
+                                    <div id="mensajeRutas" class="form-text"></div>
                                 </div>
 
 

@@ -20,6 +20,71 @@ function removeToken() {
     localStorage.removeItem(TOKEN_KEY);
 }
 
+async function cargarCentrosEnSelect(selectId, mensajeId = null, formulario = null, valorSeleccionado = "", habilitar = true) {
+    const select = document.getElementById(selectId);
+    const mensaje = mensajeId ? document.getElementById(mensajeId) : null;
+    const boton = formulario ? formulario.querySelector('button[type="submit"]') : null;
+
+    select.disabled = true;
+    if (boton) boton.disabled = true;
+    select.innerHTML = '<option value="" selected disabled>Cargando centros...</option>';
+
+    try {
+        const respuesta = await fetch("http://localhost:8000/api/centros-acopio", {
+            headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() }
+        });
+        const resultado = await respuesta.json();
+
+        const centros = respuesta.ok && Array.isArray(resultado.data) ? resultado.data : [];
+
+        select.innerHTML = '<option value="" selected disabled>Seleccione un centro</option>';
+        centros.forEach(function (centro) {
+            const opcion = document.createElement("option");
+            opcion.value = centro.idCentro;
+            opcion.textContent = centro.nombre + " — " + centro.tipo;
+            select.appendChild(opcion);
+        });
+
+        if (valorSeleccionado !== "" && valorSeleccionado !== null) {
+            select.value = String(valorSeleccionado);
+        }
+        select.disabled = !habilitar || centros.length === 0;
+        if (boton) boton.disabled = centros.length === 0;
+        if (mensaje) mensaje.textContent = centros.length === 0 ? "No existen centros registrados." : "";
+    } catch (error) {
+        select.innerHTML = '<option value="" selected disabled>No se pudieron cargar los centros</option>';
+        if (mensaje) mensaje.textContent = "No se pudieron consultar los centros existentes.";
+    }
+}
+
+async function cargarRutasEnSelect(selectId, tipoResiduo, valorSeleccionado = "", habilitar = true) {
+    const select = document.getElementById(selectId);
+    select.disabled = true;
+    select.innerHTML = '<option value="">Cargando rutas...</option>';
+
+    try {
+        const respuesta = await fetch(
+            "http://localhost:8000/api/rutas?tipoResiduo=" + encodeURIComponent(tipoResiduo),
+            { headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() } }
+        );
+        const resultado = await respuesta.json();
+        const rutas = respuesta.ok && Array.isArray(resultado.data) ? resultado.data : [];
+
+        select.innerHTML = '<option value="">Sin ruta asignada</option>';
+        rutas.forEach(function (ruta) {
+            const opcion = document.createElement("option");
+            opcion.value = ruta.idRuta;
+            opcion.textContent = ruta.descripcion + " (" + ruta.horario + ")";
+            select.appendChild(opcion);
+        });
+        select.value = valorSeleccionado === null ? "" : String(valorSeleccionado);
+        select.disabled = !habilitar;
+    } catch (error) {
+        select.innerHTML = '<option value="">Sin ruta asignada</option>';
+        select.disabled = !habilitar;
+    }
+}
+
 // Si Laravel responde 401, el token venció o no es válido
 function handleUnauthorized(respuesta) {
 
@@ -518,13 +583,26 @@ const formCentro = document.getElementById("formCentro");
 
 if (formCentro) {
 
+    const tipoCentro = document.getElementById("tipo");
+    const capacidadCentro = document.getElementById("capacidad");
+
+    function actualizarCapacidadCentro() {
+        const esCentral = tipoCentro.value === "Central Operativa";
+        capacidadCentro.disabled = esCentral;
+        capacidadCentro.required = !esCentral;
+        capacidadCentro.value = esCentral ? "" : capacidadCentro.value;
+    }
+
+    tipoCentro.addEventListener("change", actualizarCapacidadCentro);
+    actualizarCapacidadCentro();
+
     formCentro.addEventListener("submit", async function (e) {
 
         e.preventDefault();
 
         const nombre = document.getElementById("nombre").value;
         const direccion = document.getElementById("direccion").value;
-        const capacidad = document.getElementById("capacidad").value;
+        const capacidad = tipoCentro.value === "Central Operativa" ? null : capacidadCentro.value;
         const tipo = document.getElementById("tipo").value;
         const ubicacionX = document.getElementById("ubicacionX").value;
         const ubicacionY = document.getElementById("ubicacionY").value;
@@ -558,6 +636,7 @@ if (formCentro) {
                 alert("Centro creado correctamente");
 
                 formCentro.reset();
+                actualizarCapacidadCentro();
 
             } else {
 
@@ -726,26 +805,36 @@ document.addEventListener("click", async function (e) {
 
                 const centro = resultado.data;
 
-                document.getElementById("verIdCentro").textContent =
-                    centro.idCentro;
-
-                document.getElementById("verNombreCentro").textContent =
+                document.getElementById("verNombreCentro").value =
                     centro.nombre;
 
-                document.getElementById("verDireccionCentro").textContent =
+                document.getElementById("verDireccionCentro").value =
                     centro.direccion;
 
-                document.getElementById("verCapacidadCentro").textContent =
-                    centro.capacidad;
+                document.getElementById("verCapacidadCentro").value =
+                    centro.capacidad ?? "";
 
-                document.getElementById("verTipoCentro").textContent =
+                document.getElementById("verTipoCentro").value =
                     centro.tipo;
 
-                document.getElementById("verUbicacionX").textContent =
+                document.getElementById("verUbicacionX").value =
                     centro.ubicacionX;
 
-                document.getElementById("verUbicacionY").textContent =
+                document.getElementById("verUbicacionY").value =
                     centro.ubicacionY;
+
+                [
+                    "verNombreCentro",
+                    "verDireccionCentro",
+                    "verCapacidadCentro",
+                    "verTipoCentro",
+                    "verUbicacionX",
+                    "verUbicacionY"
+                ].forEach(function (campoId) {
+                    document.getElementById(campoId).disabled = true;
+                });
+
+                document.getElementById("btnGuardarCentro").classList.add("d-none");
 
             } else {
 
@@ -1145,7 +1234,7 @@ function dibujarContenedores(contenedores) {
 
 
 
-function mostrarInformacion(contenedor) {
+async function mostrarInformacion(contenedor) {
 
     const id = document.getElementById("id");
 
@@ -1155,8 +1244,8 @@ function mostrarInformacion(contenedor) {
     document.getElementById("Nv_Llenado").value = contenedor.nivelLlenado;
     document.getElementById("ubiX").value = contenedor.ubicacionX;
     document.getElementById("ubiY").value = contenedor.ubicacionY;
-    document.getElementById("Ruta").value = contenedor.idRuta;
     document.getElementById("Tipo_Residuo").value = contenedor.tipo;
+    await cargarRutasEnSelect("Ruta", contenedor.tipo, contenedor.idRuta, false);
 
 }
 
@@ -1167,6 +1256,10 @@ function mostrarInformacion(contenedor) {
 if (document.getElementById("mapa")) {
 
     cargarMapaContenedores();
+
+    document.getElementById("Tipo_Residuo").addEventListener("change", function () {
+        cargarRutasEnSelect("Ruta", this.value, "", true);
+    });
 
 }
 
@@ -1202,7 +1295,7 @@ function cargarTablaContenedores(contenedores) {
 
                 <td>${contenedor.ubicacionY}</td>
 
-                <td>${contenedor.idRuta ?? "-"}</td>
+                <td>${contenedor.idRuta ?? "Sin ruta asignada"}</td>
 
             </tr>
 
@@ -1519,6 +1612,8 @@ if (document.getElementById("formRegistroUsuario")) {
 
     const formRegistro = document.getElementById("formRegistroUsuario");
 
+    cargarCentrosEnSelect("idCentro", "mensajeCentrosUsuario", formRegistro);
+
     formRegistro.addEventListener("submit", function (e) {
 
         e.preventDefault();
@@ -1617,6 +1712,8 @@ document.addEventListener("click", async function (e) {
 
                 const usuario = resultado.data;
 
+                await cargarCentrosEnSelect("centroUsuario", null, null, usuario.idCentro, false);
+
                 document.getElementById("ciUsuario").value = usuario.ci;
                 document.getElementById("nombre1Usuario").value = usuario.nombre1;
                 document.getElementById("nombre2Usuario").value = usuario.nombre2 ?? "";
@@ -1672,6 +1769,8 @@ document.addEventListener("click", async function (e) {
 
                 const usuario = resultado.data;
 
+                await cargarCentrosEnSelect("centroUsuario", null, null, usuario.idCentro, true);
+
                 document.getElementById("ciUsuario").value = usuario.ci;
                 document.getElementById("nombre1Usuario").value = usuario.nombre1;
                 document.getElementById("nombre2Usuario").value = usuario.nombre2 ?? "";
@@ -1687,8 +1786,8 @@ document.addEventListener("click", async function (e) {
                 document.getElementById("apellido1Usuario").removeAttribute("readonly");
                 document.getElementById("apellido2Usuario").removeAttribute("readonly");
                 document.getElementById("fecNacUsuario").removeAttribute("readonly");
-                document.getElementById("tipoUsuario").removeAttribute("readonly");
-                document.getElementById("centroUsuario").removeAttribute("readonly");
+                document.getElementById("tipoUsuario").removeAttribute("disabled");
+                document.getElementById("centroUsuario").removeAttribute("disabled");
 
                 document.getElementById("btnGuardarUsuario").classList.remove("d-none");
 
@@ -1774,8 +1873,8 @@ document.addEventListener("click", async function (e) {
                 document.getElementById("apellido1Usuario").setAttribute("readonly", true);
                 document.getElementById("apellido2Usuario").setAttribute("readonly", true);
                 document.getElementById("fecNacUsuario").setAttribute("readonly", true);
-                document.getElementById("tipoUsuario").setAttribute("readonly", true);
-                document.getElementById("centroUsuario").setAttribute("readonly", true);
+                document.getElementById("tipoUsuario").setAttribute("disabled", true);
+                document.getElementById("centroUsuario").setAttribute("disabled", true);
 
                 const modal = bootstrap.Modal.getInstance(
                     document.getElementById("datosUsuarios")
@@ -1934,6 +2033,53 @@ if (document.getElementById("formLogin")) {
 if (document.getElementById("formContenedor")) {
 
     const formContenedor = document.getElementById("formContenedor");
+    const tipoResiduoSelect = document.getElementById("tipoResiduo");
+    const rutaSelect = document.getElementById("idRuta");
+    const mensajeRutas = document.getElementById("mensajeRutas");
+    const botonContenedor = formContenedor.querySelector('button[type="submit"]');
+
+    async function cargarRutasCompatibles() {
+        const tipoResiduo = tipoResiduoSelect.value;
+        rutaSelect.innerHTML = '<option value="" selected>Cargando rutas...</option>';
+        rutaSelect.disabled = true;
+        mensajeRutas.textContent = "";
+
+        if (!tipoResiduo) {
+            rutaSelect.innerHTML = '<option value="" selected>Sin ruta asignada</option>';
+            return;
+        }
+
+        try {
+            const respuesta = await fetch(
+                "http://localhost:8000/api/rutas?tipoResiduo=" + encodeURIComponent(tipoResiduo),
+                { headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() } }
+            );
+            const resultado = await respuesta.json();
+
+            const rutas = respuesta.ok && Array.isArray(resultado.data) ? resultado.data : [];
+
+            rutaSelect.innerHTML = '<option value="" selected>Sin ruta asignada</option>';
+            rutas.forEach(function (ruta) {
+                const opcion = document.createElement("option");
+                opcion.value = ruta.idRuta;
+                opcion.textContent = ruta.descripcion + " (" + ruta.horario + ")";
+                rutaSelect.appendChild(opcion);
+            });
+
+            rutaSelect.disabled = false;
+            botonContenedor.disabled = false;
+            mensajeRutas.textContent = rutas.length === 0
+                ? "No existen rutas compatibles; el contenedor quedará sin ruta."
+                : "";
+        } catch (error) {
+            rutaSelect.innerHTML = '<option value="" selected>Sin ruta asignada</option>';
+            rutaSelect.disabled = false;
+            botonContenedor.disabled = false;
+            mensajeRutas.textContent = "No se pudieron consultar las rutas; puede crear el contenedor sin asignación.";
+        }
+    }
+
+    tipoResiduoSelect.addEventListener("change", cargarRutasCompatibles);
 
     formContenedor.addEventListener("submit", function (e) {
 
@@ -1972,9 +2118,10 @@ if (document.getElementById("formContenedor")) {
                     document.getElementById("ubicacionX").value = "";
                     document.getElementById("ubicacionY").value = "";
                     document.getElementById("estado").value = "";
-                    document.getElementById("nivelLlenado").value = "";
+                    document.getElementById("nivelLlenado").value = "0";
                     document.getElementById("tipoResiduo").value = "";
                     document.getElementById("idRuta").value = "";
+                    cargarRutasCompatibles();
                 } else {
                     console.log("Respuesta del servidor:", resultado);
                     alert(JSON.stringify(resultado));
@@ -2006,8 +2153,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("Nv_Llenado").removeAttribute("readonly");
                 document.getElementById("ubiX").removeAttribute("readonly");
                 document.getElementById("ubiY").removeAttribute("readonly");
-                document.getElementById("Ruta").removeAttribute("readonly");
-                document.getElementById("Tipo_Residuo").removeAttribute("readonly");
+                document.getElementById("Ruta").removeAttribute("disabled");
+                document.getElementById("Tipo_Residuo").removeAttribute("disabled");
 
                 btnEditar.textContent = "Guardar";
 
@@ -2053,8 +2200,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.getElementById("Nv_Llenado").setAttribute("readonly", true);
                     document.getElementById("ubiX").setAttribute("readonly", true);
                     document.getElementById("ubiY").setAttribute("readonly", true);
-                    document.getElementById("Ruta").setAttribute("readonly", true);
-                    document.getElementById("Tipo_Residuo").setAttribute("readonly", true);
+                    document.getElementById("Ruta").setAttribute("disabled", true);
+                    document.getElementById("Tipo_Residuo").setAttribute("disabled", true);
 
                     btnEditar.textContent = "Editar";
 
@@ -2152,6 +2299,18 @@ document.addEventListener("DOMContentLoaded", function () {
 if (document.getElementById("formCamion")) {
 
     const formCamion = document.getElementById("formCamion");
+    const tipoCamion = document.getElementById("tipo");
+    const capacidadCamion = document.getElementById("capacidad");
+
+    function actualizarCapacidadCamion() {
+        const noUsaCapacidad = ["Camioneta", "Barredora"].includes(tipoCamion.value);
+        capacidadCamion.disabled = noUsaCapacidad;
+        capacidadCamion.required = !noUsaCapacidad;
+        capacidadCamion.value = noUsaCapacidad ? "" : capacidadCamion.value;
+    }
+
+    tipoCamion.addEventListener("change", actualizarCapacidadCamion);
+    actualizarCapacidadCamion();
 
     formCamion.addEventListener("submit", async function (e) {
 
@@ -2161,7 +2320,7 @@ if (document.getElementById("formCamion")) {
         const marca = document.getElementById("marca").value;
         const tipo = document.getElementById("tipo").value;
         const estado = document.getElementById("estado").value;
-        const capacidad = document.getElementById("capacidad").value;
+        const capacidad = capacidadCamion.disabled ? null : capacidadCamion.value;
 
         try {
 
@@ -2191,6 +2350,7 @@ if (document.getElementById("formCamion")) {
                 alert("Camión creado correctamente");
 
                 formCamion.reset();
+                actualizarCapacidadCamion();
 
             } else {
 
@@ -2215,6 +2375,8 @@ if (document.getElementById("formCamion")) {
 const formMaquinaria = document.getElementById("formMaquinaria");
 
 if (formMaquinaria) {
+
+    cargarCentrosEnSelect("idCentroMaquinaria", "mensajeCentrosMaquinaria", formMaquinaria);
 
     formMaquinaria.addEventListener("submit", async function (e) {
 
@@ -2426,6 +2588,8 @@ document.addEventListener("click", async function (e) {
 
                 const maquinaria = resultado.data;
 
+                await cargarCentrosEnSelect("verIdCentroMaquinaria", null, null, maquinaria.idCentro, false);
+
                 document.getElementById("verNombreMaquinaria").value =
                     maquinaria.nombre;
 
@@ -2462,7 +2626,7 @@ document.addEventListener("click", async function (e) {
     EDITAR MAQUINARIA
 --------------------- */
 
-document.addEventListener("click", function (e) {
+document.addEventListener("click", async function (e) {
 
     if (e.target.classList.contains("editarMaquinaria")) {
 
@@ -2480,11 +2644,13 @@ document.addEventListener("click", function (e) {
         )
             .then(respuesta => respuesta.json())
 
-            .then(resultado => {
+            .then(async resultado => {
 
                 if (resultado.success) {
 
                     const maquinaria = resultado.data;
+
+                    await cargarCentrosEnSelect("verIdCentroMaquinaria", null, null, maquinaria.idCentro, true);
 
                     document.getElementById("verNombreMaquinaria").value =
                         maquinaria.nombre;

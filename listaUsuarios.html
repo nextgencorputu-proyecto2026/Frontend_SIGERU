@@ -70,42 +70,48 @@
 
                         <div class="form-group mb-3">
                             <label for="ciUsuario">CI:</label>
-                            <input type="text" class="datos form-control" id="ciUsuario" readonly>
+                            <input type="text" class="datos form-control" id="ciUsuario" maxlength="8" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="nombre1Usuario">Primer nombre:</label>
-                            <input type="text" class="datos form-control" id="nombre1Usuario" readonly>
+                            <input type="text" class="datos form-control" id="nombre1Usuario" maxlength="30" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="nombre2Usuario">Segundo nombre:</label>
-                            <input type="text" class="datos form-control" id="nombre2Usuario" readonly>
+                            <input type="text" class="datos form-control" id="nombre2Usuario" maxlength="30" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="apellido1Usuario">Primer apellido:</label>
-                            <input type="text" class="datos form-control" id="apellido1Usuario" readonly>
+                            <input type="text" class="datos form-control" id="apellido1Usuario" maxlength="30" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="apellido2Usuario">Segundo apellido:</label>
-                            <input type="text" class="datos form-control" id="apellido2Usuario" readonly>
+                            <input type="text" class="datos form-control" id="apellido2Usuario" maxlength="30" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="fecNacUsuario">Fecha de nacimiento:</label>
-                            <input type="text" class="datos form-control" id="fecNacUsuario" readonly>
+                            <input type="date" class="datos form-control" id="fecNacUsuario" readonly>
                         </div>
 
                         <div class="form-group mb-3">
                             <label for="tipoUsuario">Rol:</label>
-                            <input type="text" class="datos form-control" id="tipoUsuario" readonly>
+                            <select class="datos form-select" id="tipoUsuario" disabled>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Operario">Operario</option>
+                                <option value="Chofer">Chofer</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
                             <label for="centroUsuario">Centro:</label>
-                            <input type="text" class="datos form-control" id="centroUsuario" readonly>
+                            <select class="datos form-select" id="centroUsuario" disabled>
+                                <option value="">Cargando centros...</option>
+                            </select>
                         </div>
 
                     </div>

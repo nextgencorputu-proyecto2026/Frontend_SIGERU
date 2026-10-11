@@ -1,6 +1,7 @@
 <nav class="navbar navbar-dark bg-dark fixed-top">
 
-        <div class="container-fluid">
+        <div class="container-fluid flex-nowrap gap-2">
+<a class="navbar-brand mb-0 d-lg-none ms-auto" href="home.html">SIGERU</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
                         data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar"
@@ -11,15 +12,15 @@
                 </button>
 
 
-                <div class="navbar-toggler">
+                <div class="d-none d-lg-flex align-items-center ms-auto">
 
-                        <div class="container-fluid d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2 gap-md-3">
 
-                                <h2 class="navbar-brand mb-0">
+                                <h2 class="navbar-brand mb-0 d-none d-md-block">
                                         Usuario
                                 </h2>
 
-                                <a href="home.html" target="_blank" class="nav-link">
+                                <a href="home.html" target="_blank" class="nav-link text-white d-none d-lg-block">
 
                                         Nueva Pagina
 
@@ -34,8 +35,13 @@
                 </div>
 
 
-                <div class="offcanvas offcanvas-start text-bg-dark"
-                        style="width: 200px !important; --bs-offcanvas-width: 200px !important;" tabindex="-1"
+
+
+        </div>
+
+</nav>
+<div class="offcanvas offcanvas-start text-bg-dark"
+                        style="width: min(320px, 90vw) !important;" tabindex="-1"
                         id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
 
 
@@ -55,9 +61,9 @@
                         </div>
 
 
-                        <div class="offcanvas-body">
+                        <div class="offcanvas-body d-flex flex-column">
 
-                                <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                                <ul class="navbar-nav flex-grow-1 pe-0">
 
 
                                         <!-- INICIO -->
@@ -77,17 +83,17 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Contenedores
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a id="Mapa_Contenedores" class="dropdown-item"
+                                                                <a id="Mapa_Contenedores" class="dropdown-item text-wrap text-break"
                                                                         href="mapaContenedores.html">
 
                                                                         Mapa Contenedores
@@ -96,7 +102,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="altaContenedores.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaContenedores.html#altaContenedorModal">
 
                                                                         Alta Contenedores
 
@@ -104,7 +110,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="listaContenedores.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaContenedores.html">
 
                                                                         Lista Contenedores
 
@@ -120,17 +126,17 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Camiones
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a class="dropdown-item" href="listaCamiones.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaCamiones.html">
 
                                                                         Lista Camiones
 
@@ -138,7 +144,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="altaCamiones.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaCamiones.html#altaCamionModal">
 
                                                                         Alta Camiones
 
@@ -154,27 +160,23 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Rutas
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a class="dropdown-item" href="#">
-
-                                                                        Lista Rutas
+                                                                <a class="dropdown-item text-wrap text-break" href="listaRutas.html">Lista Rutas
 
                                                                 </a>
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="#">
-
-                                                                        Alta Rutas
+                                                                <a class="dropdown-item text-wrap text-break" href="listaRutas.html#nuevaRuta">Alta Rutas
 
                                                                 </a>
                                                         </li>
@@ -188,17 +190,17 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Personal
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a class="dropdown-item" href="listaUsuarios.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaUsuarios.html">
 
                                                                         Lista Usuarios
 
@@ -206,7 +208,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="registroUsuario.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaUsuarios.html#altaUsuarioModal">
 
                                                                         Registrar Usuario
 
@@ -222,17 +224,17 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Centros de acopio
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a class="dropdown-item" href="listaCentros.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaCentros.html">
 
                                                                         Lista de Centros
 
@@ -240,7 +242,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="altaCentros.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaCentros.html#altaCentroModal">
 
                                                                         Registrar Centro
 
@@ -256,17 +258,17 @@
 
                                         <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle" href="#" role="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
                                                         Maquinaria
 
                                                 </a>
 
-                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
 
                                                         <li>
-                                                                <a class="dropdown-item" href="listaMaquinaria.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaMaquinaria.html">
 
                                                                         Lista de Maquinaria
 
@@ -274,7 +276,7 @@
                                                         </li>
 
                                                         <li>
-                                                                <a class="dropdown-item" href="altaMaquinaria.html">
+                                                                <a class="dropdown-item text-wrap text-break" href="listaMaquinaria.html#altaMaquinariaModal">
 
                                                                         Registrar Maquinaria
 
@@ -286,12 +288,16 @@
                                         </li>
 
 
-                                </ul>
+                                <li class="nav-item"><a class="nav-link text-wrap" href="listaIncidencias.html">Incidencias</a></li>
+<li class="nav-item"><a class="nav-link text-wrap" href="rutasChofer.html">Mis rutas</a></li>
+<li class="nav-item"><a class="nav-link text-wrap" href="listaCuadrillas.html">Cuadrillas</a></li>
+</ul>
+<div class="d-grid gap-2 d-lg-none mt-4 pt-3 border-top border-secondary">
+<span class="text-white-50">Usuario</span>
+<a href="home.html" target="_blank" class="btn btn-outline-light">Nueva página</a>
+<a href="login.html" id="btnLogoutMobile" class="btn btn-danger" onclick="localStorage.removeItem('access_token');">Cerrar sesión</a>
+</div>
 
                         </div>
 
                 </div>
-
-        </div>
-
-</nav>

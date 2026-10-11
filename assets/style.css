@@ -19,8 +19,9 @@ body{
 }
 
 #logoLogin{
-    height: 350px;
-    width: 350px;
+    height: auto;
+    width: 100%;
+    max-width: 280px;
 }
 
 #mapa{
@@ -49,8 +50,9 @@ main img:hover{
     transform:scale(1.05);
 }
 #logoLogin{
-    height:350px;
-    width:350px;
+    height: auto;
+    width: 100%;
+    max-width: 280px;
 }
 @media (max-width: 768px) {
 

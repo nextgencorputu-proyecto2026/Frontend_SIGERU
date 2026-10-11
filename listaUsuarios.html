@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
-    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/style.css?v=mobile-20261011-1">
 
 </head>
 
@@ -16,14 +16,15 @@
 
     <div id="navbar-container"></div>
 
-    <main class="container">
+    <main class="container px-2 px-sm-3 pb-4">
         <h2 class="text-center">USUARIOS</h2>
 
+        <div class="d-grid d-sm-flex justify-content-sm-end mb-3"><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#altaUsuarioModal">Registrar usuario</button></div>
         <!-- barra de busqueda -->
         <nav class="navbar bg-body-tertiary">
             <div class="container-fluid justify-content-center">
-                <form id="formBusquedaUsuarios" class="d-flex" role="search">
-                    <input id="inputNombre" class="form-control me-2" type="search" placeholder="Nombre"
+                <form id="formBusquedaUsuarios" class="d-flex flex-column flex-sm-row gap-2 col-12 col-md-8 col-lg-6 p-0" role="search">
+                    <input id="inputNombre" class="form-control" type="search" placeholder="Nombre"
                         aria-label="Nombre" />
                     <button id="buscarUsuarios" class="btn btn-outline-success" type="submit"
                         method="GET">Buscar</button>
@@ -32,7 +33,8 @@
         </nav>
 
         <!-- Tabla -->
-        <table class="table table-hover">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Listado con desplazamiento horizontal">
+<table class="table table-hover">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
@@ -50,11 +52,12 @@
 
             </tbody>
         </table>
+</div>
         <!-- Modal datos del usuario -->
         <div class="modal fade" id="datosUsuarios" tabindex="-1" aria-labelledby="datosUsuariosLabel"
             aria-hidden="true">
 
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-scrollable">
 
                 <div class="modal-content">
 
@@ -136,7 +139,99 @@
 
     </main>
 
-    <script src="assets/script.js"></script>
+    <div class="modal fade" id="altaUsuarioModal" tabindex="-1" aria-labelledby="altaUsuarioModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h2 class="modal-title fs-5" id="altaUsuarioModalLabel">Registrar usuario</h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-start">
+<form data-alta="altaUsuario" id="formRegistroUsuario" method="POST" action="http://localhost:8000/api/usuarios">
+
+                                <div class="mb-3">
+                                    <label for="altaUsuario_ci" class="form-label">Cédula</label>
+                                    <input type="text" class="form-control" id="altaUsuario_ci" name="ci" placeholder="12345678"
+                                        minlength="8" maxlength="8" inputmode="numeric" pattern="[0-9]{8}" required>
+                                </div>
+
+                                <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_nombre1" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="altaUsuario_nombre1" name="nombre1"
+                                        placeholder="Nombre" maxlength="30" required>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_nombre2" class="form-label">Segundo nombre (opcional)</label>
+                                    <input type="text" class="form-control" id="altaUsuario_nombre2" name="nombre2"
+                                        placeholder="Segundo nombre" maxlength="30">
+                                </div>
+                                </div>
+
+                                <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_apellido1" class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="altaUsuario_apellido1" name="apellido1"
+                                        placeholder="Apellido" maxlength="30" required>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_apellido2" class="form-label">Segundo apellido (opcional)</label>
+                                    <input type="text" class="form-control" id="altaUsuario_apellido2" name="apellido2"
+                                        placeholder="Segundo apellido" maxlength="30">
+                                </div>
+                                </div>
+
+                                <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_fec_nac" class="form-label">Fecha de nacimiento</label>
+                                    <input type="date" class="form-control" id="altaUsuario_fec_nac" name="fec_nac" required>
+                                </div>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="altaUsuario_tipo" class="form-label">Rol</label>
+                                    <select class="form-select" id="altaUsuario_tipo" name="tipo" required>
+                                        <option value="">Seleccione un rol</option>
+                                        <option value="Administrador">Administrador</option>
+                                        <option value="Operario">Operario</option>
+                                        <option value="Chofer">Chofer</option>
+                                    </select>
+                                </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="altaUsuario_idCentro" class="form-label">Centro</label>
+                                    <select class="form-select" id="altaUsuario_idCentro" name="idCentro" required>
+                                        <option value="">Seleccione un centro</option>
+                                    </select>
+                                    <div id="altaUsuario_mensajeCentrosUsuario" class="form-text"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="altaUsuario_email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="altaUsuario_email" name="email"
+                                        placeholder="email@ejemplo.com" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="altaUsuario_password" class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="altaUsuario_password" name="password"
+                                        minlength="6" pattern="(?=.*[A-Z]).{6,}" title="Debe tener al menos 6 caracteres y una letra mayúscula" required>
+                                </div>
+
+                                <div class="d-flex flex-column flex-sm-row justify-content-sm-end gap-2">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button type="submit" class="btn btn-primary">Registrar Usuario</button>
+                                </div>
+
+                            <div class="alert alert-danger d-none mt-3 mb-0" data-alta-error role="alert"></div>
+</form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="assets/script.js?v=flota-20261011-1"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>

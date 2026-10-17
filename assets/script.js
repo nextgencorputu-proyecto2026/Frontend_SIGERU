@@ -1,3 +1,8 @@
+// Retirar composiciones y reportes antiguos de vista previa.
+try {
+    sessionStorage.removeItem('sigeru_cuadrillas_vista_previa_v1');
+    sessionStorage.removeItem('sigeru_chofer_vista_previa_v1');
+} catch {}
 /* ---------------------
     CONFIGURACIÓN JWT
 --------------------- */
@@ -2762,7 +2767,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mapaElemento = document.getElementById('mapaRutas');
     if (!mapaElemento) return;
     const lista = document.getElementById('listaRutas');
-    const mensaje = document.getElementById('mensajeRutasVista');
     const formulario = document.getElementById('columnaFormularioRuta');
     const columnaLista = document.getElementById('columnaListaRutas');
     const columnaMapa = document.getElementById('columnaMapaRutas');
@@ -2798,10 +2802,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const esSeleccionada = ruta => seleccionada && String(ruta.idRuta) === String(seleccionada.idRuta);
     const puntosRuta = ruta => contenedores.filter(c => c.idRuta != null && String(c.idRuta) === String(ruta.idRuta) && c.ubicacionX != null && c.ubicacionY != null && c.ubicacionX !== '' && c.ubicacionY !== '' && Number.isFinite(Number(c.ubicacionX)) && Number.isFinite(Number(c.ubicacionY)) && Math.abs(Number(c.ubicacionY)) <= 90 && Math.abs(Number(c.ubicacionX)) <= 180);
 
-    function mostrarMensaje(texto, tipo = 'info') {
-        mensaje.textContent = texto;
-        mensaje.className = 'alert alert-' + tipo + ' text-start';
-    }
     function dibujarMapa() {
         if (capa) capa.clearLayers();
         leyenda.replaceChildren();
@@ -2903,12 +2903,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     botonEditar.addEventListener('click', () => { if (seleccionada) abrirFormulario('editar'); });
     document.getElementById('cancelarRuta').addEventListener('click', cerrarFormulario);
     document.getElementById('cerrarFormularioRuta').addEventListener('click', cerrarFormulario);
-    document.getElementById('mostrarTodasRutas').addEventListener('click', () => {
+    function mostrarTodasRutas() {
         seleccionada = null;
+        buscar.value = '';
+        pagina = 1;
         botonEditar.disabled = true;
         if (modoFormulario === 'editar') cerrarFormulario();
-        dibujarLista(); dibujarMapa();
-    });
+        dibujarLista();
+        dibujarMapa();
+    }
+    document.getElementById('mostrarTodasRutas').addEventListener('click', mostrarTodasRutas);
     buscar.addEventListener('input', () => { pagina = 1; dibujarLista(); });
     anterior.addEventListener('click', () => { pagina--; dibujarLista(); });
     siguiente.addEventListener('click', () => { pagina++; dibujarLista(); });
@@ -2926,16 +2930,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     const [resultadoRutas, resultadoContenedores] = await Promise.allSettled([consultar('rutas'), consultar('contenedores')]);
     if (resultadoRutas.status === 'fulfilled') rutas = resultadoRutas.value;
     if (resultadoContenedores.status === 'fulfilled') contenedores = resultadoContenedores.value;
-    if (resultadoRutas.status === 'rejected') mostrarMensaje('No se pudieron cargar las rutas. ' + resultadoRutas.reason.message, 'danger');
-    else if (resultadoContenedores.status === 'rejected') mostrarMensaje('Las rutas se cargaron, pero no se pudieron consultar las ubicaciones de sus contenedores.', 'warning');
-    else mostrarMensaje(rutas.length ? 'Seleccione una ruta para consultar sus datos y ubicaciones.' : 'No hay rutas registradas.');
-    dibujarLista(); dibujarMapa();
+    mostrarTodasRutas();
+    if (resultadoRutas.status === 'rejected') {
+        detalleMapa.textContent = 'No se pudieron cargar las rutas. ' + resultadoRutas.reason.message;
+    } else if (resultadoContenedores.status === 'rejected') {
+        detalleMapa.textContent = 'Las rutas se cargaron, pero no se pudieron consultar las ubicaciones de sus contenedores.';
+    }
 });
 
-/* Vista de incidencias. La fuente de datos se conectará al habilitar su API.
-   cargarTablaIncidencias recibe idIncidencia, tipo, estado, idCuadrilla,
-   cuadrilla (nombre), contenedor (idContenedor, ubicacionX, ubicacionY)
-   o vehiculo (idCamion, matricula). No persiste datos de ejemplo. */
+/* Gestión de incidencias mediante la API. */
+async function apiGestion(endpoint, method = 'GET', payload = null) {
+    const respuesta = await fetch('http://localhost:8000/api/' + endpoint, {
+        method,
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+        ...(payload !== null ? { body: JSON.stringify(payload) } : {})
+    });
+    const resultado = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok) {
+        const err = new Error(Object.values(resultado.errors || {}).flat().join(' ') || resultado.mensaje || resultado.message || 'No se pudo completar la operación.');
+        err.status = respuesta.status; throw err;
+    }
+    return resultado.data;
+}
+let administraIncidencias = false;
+let cuadrillasIncidencias = [];
+let editandoIncidencia = null;
+const tiposIncidencia = {
+    vehiculo: ['Vehículo averiado', 'Sistema informático de vehículo defectuoso', 'Sistema de recolección averiado'],
+    contenedor: ['Residuos fuera de contenedor', 'Incendiado', 'Roto', 'Ruta a contenedor obstruida']
+};
+function mensajeIncidencias(texto, fallo = false) {
+    const aviso = document.getElementById('disponibilidadIncidencias');
+    aviso.textContent = texto; aviso.classList.remove('d-none');
+    aviso.classList.toggle('text-danger', fallo);
+}
+async function actualizarIncidencias() {
+    const datos = await apiGestion('incidencias');
+    cargarTablaIncidencias(datos);
+    mensajeIncidencias(datos.length ? '' : 'No hay incidencias registradas.');
+}
+function cambiarTiposIncidencia(valor = '') {
+    const select = document.getElementById('tipoFormularioIncidencia');
+    select.replaceChildren(new Option('Seleccioná un tipo', ''));
+    tiposIncidencia[document.getElementById('elementoFormularioIncidencia').value].forEach(tipo => select.add(new Option(tipo, tipo)));
+    select.value = valor;
+}
+function abrirFormularioIncidencia(incidencia = null) {
+    editandoIncidencia = incidencia;
+    const form = document.getElementById('formIncidencia'); form.reset();
+    document.getElementById('errorFormularioIncidencia').textContent = '';
+    document.getElementById('tituloFormularioIncidencia').textContent = incidencia ? 'Editar incidencia #' + incidencia.idIncidencia : 'Reportar incidencia';
+    const elemento = document.getElementById('elementoFormularioIncidencia');
+    elemento.value = incidencia?.vehiculo ? 'vehiculo' : 'contenedor';
+    cambiarTiposIncidencia(incidencia?.tipo || '');
+    document.getElementById('idElementoIncidencia').value = incidencia?.vehiculo?.idVehiculo ?? incidencia?.contenedor?.idContenedor ?? '';
+    document.getElementById('prioridadFormularioIncidencia').value = incidencia?.prioridad || 'Media';
+    document.getElementById('estadoFormularioIncidencia').value = incidencia?.estado || 'Pendiente';
+    document.getElementById('gestionAdministradorIncidencia').classList.toggle('d-none', !administraIncidencias);
+    const cuadrilla = document.getElementById('cuadrillaFormularioIncidencia');
+    cuadrilla.replaceChildren(new Option('Conservar asignación actual', ''));
+    cuadrillasIncidencias.forEach(c => cuadrilla.add(new Option('Cuadrilla #' + c.idCuadrilla, c.idCuadrilla)));
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFormularioIncidencia')).show();
+}
+
 let incidenciasListado = [];
 let mapaIncidenciasListado = null;
 let marcadoresIncidenciasListado = null;
@@ -2943,7 +3000,7 @@ let marcadoresIncidenciasListado = null;
 function datosVistaIncidencia(incidencia) {
     const esContenedor = !!incidencia.contenedor || incidencia.idContenedor != null;
     const elemento = esContenedor ? incidencia.contenedor : incidencia.vehiculo;
-    const id = esContenedor ? (elemento?.idContenedor ?? incidencia.idContenedor) : (elemento?.idCamion ?? incidencia.idCamion ?? incidencia.idVehiculo);
+    const id = esContenedor ? (elemento?.idContenedor ?? incidencia.idContenedor) : (elemento?.idVehiculo ?? elemento?.idCamion ?? incidencia.idCamion ?? incidencia.idVehiculo);
     const asignada = incidencia.idCuadrilla != null || incidencia.cuadrilla != null;
     const cuadrilla = typeof incidencia.cuadrilla === 'object' ? incidencia.cuadrilla?.nombre : incidencia.cuadrilla;
     return {
@@ -2953,7 +3010,8 @@ function datosVistaIncidencia(incidencia) {
         estado: incidencia.estado ?? 'Sin especificar',
         cuadrilla: asignada ? 'Asignada · ' + (cuadrilla || 'Cuadrilla ' + (incidencia.idCuadrilla ?? incidencia.cuadrilla?.idCuadrilla ?? 'sin identificar')) : 'Sin asignar',
         elemento: (esContenedor ? 'Contenedor' : 'Vehículo') + (id != null ? ' #' + id : '') + (elemento?.matricula ? ' · ' + elemento.matricula : ''),
-        lat: elemento?.ubicacionX, lng: elemento?.ubicacionY
+        // Contenedores: X es longitud; Y es latitud. Leaflet recibe [latitud, longitud].
+        lat: elemento?.ubicacionY, lng: elemento?.ubicacionX
     };
 }
 
@@ -2961,7 +3019,7 @@ function verIncidencia(incidencia) {
     const datos = datosVistaIncidencia(incidencia);
     const detalle = document.getElementById('datosIncidencia');
     detalle.replaceChildren();
-    [['ID', datos.id], ['Tipo de incidencia', datos.tipo], ['Estado', datos.estado], ['Cuadrilla', datos.cuadrilla], ['Elemento reportado', datos.elemento], ['Descripción', incidencia.descripcion ?? 'Sin descripción']].forEach(([titulo, valor]) => {
+    [['ID', datos.id], ['Tipo de incidencia', datos.tipo], ['Estado', datos.estado], ['Cuadrilla', datos.cuadrilla], ['Elemento reportado', datos.elemento], ['Prioridad', incidencia.prioridad], ['Creación', incidencia.fechaCreacion], ['Resolución', incidencia.fechaResolucion ?? 'Sin resolver']].forEach(([titulo, valor]) => {
         const termino = document.createElement('dt');
         termino.className = 'col-12 col-sm-4';
         termino.textContent = titulo;
@@ -2976,6 +3034,23 @@ function verIncidencia(incidencia) {
 function cargarTablaIncidencias(incidencias) {
     if (!document.getElementById('tablaIncidencias')) return;
     incidenciasListado = Array.isArray(incidencias) ? incidencias : [];
+    const tipos = document.getElementById('buscarIncidencia');
+    const tipoAnterior = tipos.value;
+    tipos.replaceChildren(new Option('Todos los tipos', ''));
+    const conocidos = new Set();
+    Object.entries(tiposIncidencia).forEach(([elemento, opciones]) => {
+        const grupo = document.createElement('optgroup');
+        grupo.label = elemento === 'contenedor' ? 'Contenedores' : 'Vehículos';
+        opciones.forEach(tipo => {
+            grupo.append(new Option(tipo, tipo));
+            conocidos.add(tipo);
+        });
+        tipos.append(grupo);
+    });
+    [...new Set(incidenciasListado.map(i => datosVistaIncidencia(i).tipo))]
+        .filter(tipo => !conocidos.has(tipo)).sort()
+        .forEach(tipo => tipos.add(new Option(tipo, tipo)));
+    if ([...tipos.options].some(opcion => opcion.value === tipoAnterior)) tipos.value = tipoAnterior;
     const select = document.getElementById('estadoIncidencia');
     const anterior = select.value;
     select.replaceChildren(new Option('Todos los estados', ''));
@@ -2986,13 +3061,13 @@ function cargarTablaIncidencias(incidencias) {
 }
 
 function filtrarIncidencias() {
-    const buscar = document.getElementById('buscarIncidencia').value.trim().toLocaleLowerCase();
+    const buscar = document.getElementById('buscarIncidencia').value;
     const elemento = document.getElementById('elementoIncidencia').value;
     const estado = document.getElementById('estadoIncidencia').value;
     const asignacion = document.getElementById('asignacionIncidencia').value;
     const visibles = incidenciasListado.filter(incidencia => {
         const d = datosVistaIncidencia(incidencia);
-        return (!buscar || [d.id, d.tipo, d.elemento].join(' ').toLocaleLowerCase().includes(buscar))
+        return (!buscar || d.tipo === buscar)
             && (!elemento || (d.esContenedor ? 'contenedor' : 'vehiculo') === elemento)
             && (!estado || d.estado === estado)
             && (!asignacion || d.asignada === (asignacion === 'si'));
@@ -3018,6 +3093,11 @@ function filtrarIncidencias() {
         ver.setAttribute('aria-label', 'Ver incidencia ' + d.id);
         ver.addEventListener('click', () => verIncidencia(incidencia));
         accion.append(ver);
+        if (administraIncidencias) {
+            const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'btn btn-outline-secondary btn-sm ms-1'; editar.textContent = 'Editar';
+            editar.addEventListener('click', () => abrirFormularioIncidencia(incidencia));
+            accion.append(editar);
+        }
         fila.append(accion);
         tabla.append(fila);
         if (!d.esContenedor) return;
@@ -3054,174 +3134,64 @@ if (document.getElementById('tablaIncidencias')) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mapaIncidenciasListado);
         marcadoresIncidenciasListado = L.featureGroup().addTo(mapaIncidenciasListado);
     }
-    ['buscarIncidencia', 'elementoIncidencia', 'estadoIncidencia', 'asignacionIncidencia'].forEach(id => document.getElementById(id).addEventListener(id === 'buscarIncidencia' ? 'input' : 'change', filtrarIncidencias));
+    ['buscarIncidencia', 'elementoIncidencia', 'estadoIncidencia', 'asignacionIncidencia'].forEach(id => document.getElementById(id).addEventListener('change', filtrarIncidencias));
     cargarTablaIncidencias([]);
+    mensajeIncidencias('Cargando incidencias...');
+    document.getElementById('elementoFormularioIncidencia').addEventListener('change', () => cambiarTiposIncidencia());
+    document.getElementById('crearIncidencia').addEventListener('click', () => abrirFormularioIncidencia());
+    document.getElementById('formIncidencia').addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!e.target.reportValidity() || document.getElementById('guardarIncidencia').disabled) return;
+        const target = document.getElementById('elementoFormularioIncidencia').value;
+        const payload = {
+            tipo: document.getElementById('tipoFormularioIncidencia').value,
+            prioridad: document.getElementById('prioridadFormularioIncidencia').value,
+            idVehiculo: target === 'vehiculo' ? Number(document.getElementById('idElementoIncidencia').value) : null,
+            idContenedor: target === 'contenedor' ? Number(document.getElementById('idElementoIncidencia').value) : null
+        };
+        if (administraIncidencias) {
+            payload.estado = document.getElementById('estadoFormularioIncidencia').value;
+            const asignacion = document.getElementById('cuadrillaFormularioIncidencia').value;
+            if (asignacion) payload.idCuadrilla = Number(asignacion);
+        }
+        const id = editandoIncidencia?.idIncidencia;
+        const boton = document.getElementById('guardarIncidencia'); boton.disabled = true;
+        document.getElementById('errorFormularioIncidencia').textContent = '';
+        try {
+            const guardada = await apiGestion('incidencias' + (id ? '/' + id : ''), id ? 'PUT' : 'POST', payload);
+            incidenciasListado = id ? incidenciasListado.map(i => i.idIncidencia === id ? guardada : i) : [guardada, ...incidenciasListado];
+            cargarTablaIncidencias(incidenciasListado);
+            bootstrap.Modal.getInstance(document.getElementById('modalFormularioIncidencia')).hide();
+            mensajeIncidencias('Incidencia guardada en el sistema.');
+        } catch (err) { document.getElementById('errorFormularioIncidencia').textContent = err.message; }
+        finally { boton.disabled = false; }
+    });
+    (async () => {
+        try {
+            // La consulta de cuadrillas está protegida para administradores.
+            try { cuadrillasIncidencias = await apiGestion('cuadrillas'); administraIncidencias = true; }
+            catch (err) { if (err.status !== 403) throw err; }
+            await actualizarIncidencias();
+            document.getElementById('crearIncidencia').disabled = false;
+        } catch (err) { mensajeIncidencias(err.message, true); }
+    })();
 }
 
-/* Prototipo de chofer: sesión local, sin operaciones en las APIs.
-   Contrato de ruta: idRuta, descripcion, paradas ordenadas con idContenedor,
-   lat/lng y un último punto tipo deposito; trazado opcional [[lat,lng],...]. */
-const CLAVE_PREVIA_CHOFER = 'sigeru_chofer_vista_previa_v1';
-function leerVistaChofer() {
-    try { return JSON.parse(sessionStorage.getItem(CLAVE_PREVIA_CHOFER)) || { rutas: [], avances: {} }; }
-    catch { return { rutas: [], avances: {} }; }
-}
-function guardarVistaChofer(datos) { sessionStorage.setItem(CLAVE_PREVIA_CHOFER, JSON.stringify(datos)); }
-function ejemplosChofer() {
-    return [1, 2].map(id => ({ idRuta: id, descripcion: 'Ruta de ejemplo ' + id,
-        paradas: Array.from({length: 8}, (_, i) => ({ tipo: 'contenedor', idContenedor: id * 100 + i + 1, nombre: 'Contenedor #' + (id * 100 + i + 1), lat: -34.90 + i * 0.002, lng: -56.17 + id * 0.008 + i * 0.001 } )).concat([{tipo: 'deposito', nombre: 'Depósito final de ejemplo', lat: -34.88, lng: -56.14 + id * 0.002}])
-    }));
-}
-function crearMapaChofer(id) {
-    if (typeof L === 'undefined') return null;
-    const mapa = L.map(id).setView([-34.9, -56.16], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mapa);
-    return mapa;
-}
-function puntoChoferValido(p) { return p.lat != null && p.lng != null && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && Math.abs(Number(p.lat)) <= 90 && Math.abs(Number(p.lng)) <= 180; }
+// Se retiran las rutas y reportes de ejemplo: no existen APIs de recorridos.
 if (document.getElementById('listaRutasChofer')) {
-    const mapa = crearMapaChofer('mapaRutasChofer');
-    const capa = mapa ? L.featureGroup().addTo(mapa) : null;
-    let pagina = 1;
-    function dibujar() {
-        const datos = leerVistaChofer();
-        const lista = document.getElementById('listaRutasChofer');
-        const leyenda = document.getElementById('leyendaChofer');
-        lista.replaceChildren(); leyenda.replaceChildren(); capa?.clearLayers();
-        const paginas = Math.max(1, Math.ceil(datos.rutas.length / 5));
-        pagina = Math.min(pagina, paginas);
-        datos.rutas.slice((pagina - 1) * 5, pagina * 5).forEach(ruta => {
-            const item = document.createElement('div'); item.className = 'list-group-item rounded d-flex align-items-center justify-content-between gap-2';
-            const titulo = document.createElement('span'); titulo.className = 'text-break'; titulo.textContent = ruta.descripcion;
-            const iniciar = document.createElement('a'); iniciar.className = 'btn btn-success btn-sm flex-shrink-0'; iniciar.textContent = 'Iniciar recorrido'; iniciar.href = 'recorridoChofer.html?ruta=' + encodeURIComponent(ruta.idRuta);
-            item.append(titulo, iniciar); lista.append(item);
-        });
-        if (!datos.rutas.length) { const vacio = document.createElement('p'); vacio.className = 'text-body-secondary'; vacio.textContent = 'No hay rutas asignadas disponibles.'; lista.append(vacio); }
-        datos.rutas.forEach((ruta, i) => {
-            const color = ['#0d6efd', '#198754', '#6f42c1'][i % 3];
-            const etiqueta = document.createElement('span'); etiqueta.className = 'badge border text-wrap'; etiqueta.style.color = color; etiqueta.textContent = ruta.descripcion; leyenda.append(etiqueta);
-            if (!capa) return;
-            const puntos = ruta.paradas.filter(puntoChoferValido);
-            const trazado = ruta.trazado || puntos.map(p => [Number(p.lat), Number(p.lng)]);
-            if (trazado.length > 1) L.polyline(trazado, {color, weight: 4}).addTo(capa);
-            puntos.forEach(p => { const texto = document.createElement('span'); texto.textContent = ruta.descripcion + ' · ' + p.nombre; L.circleMarker([p.lat, p.lng], {color, radius: p.tipo === 'deposito' ? 9 : 6}).bindPopup(texto).addTo(capa); });
-        });
-        if (capa?.getLayers().length) mapa.fitBounds(capa.getBounds(), {padding:[25,25], maxZoom:15});
-        document.getElementById('paginaChofer').textContent = 'Página ' + pagina + ' de ' + paginas;
-        document.getElementById('anteriorChofer').disabled = pagina === 1;
-        document.getElementById('siguienteChofer').disabled = pagina === paginas;
-    }
-    document.getElementById('ejemploRutasChofer').addEventListener('click', () => { guardarVistaChofer({rutas: ejemplosChofer(), avances: {}}); pagina = 1; dibujar(); });
-    document.getElementById('anteriorChofer').addEventListener('click', () => {pagina--; dibujar();});
-    document.getElementById('siguienteChofer').addEventListener('click', () => {pagina++; dibujar();});
-    dibujar();
+    document.getElementById('listaRutasChofer').textContent = 'La consulta de recorridos asignados aún no está disponible.';
+    ['anteriorChofer', 'siguienteChofer'].forEach(id => document.getElementById(id).disabled = true);
 }
 if (document.getElementById('paradasChofer')) {
-    const datos = leerVistaChofer();
-    const id = new URLSearchParams(location.search).get('ruta');
-    const ruta = datos.rutas.find(r => String(r.idRuta) === id);
-    const mapa = crearMapaChofer('mapaRecorridoChofer');
-    const capa = mapa ? L.featureGroup().addTo(mapa) : null;
-    const recolectar = document.getElementById('recolectarChofer');
-    const incidencia = document.getElementById('incidenciaChofer');
-    const deposito = document.getElementById('depositoChofer');
-    const completar = document.getElementById('completarRutaChofer');
-    let avance = datos.avances[id] || { indice: 0, acciones: [] };
-    let objetivoReporte = null;
-    function mostrar() {
-        const lista = document.getElementById('paradasChofer'); lista.replaceChildren(); capa?.clearLayers();
-        const pendientes = ruta ? ruta.paradas.slice(avance.indice) : [];
-        document.getElementById('nombreRecorridoChofer').textContent = ruta?.descripcion || 'Ruta no disponible';
-        document.getElementById('progresoChofer').textContent = ruta ? avance.indice + ' de ' + ruta.paradas.length + ' puntos atendidos' : 'Volvé a Mis rutas para seleccionar un recorrido.';
-        pendientes.slice(0,5).forEach((p,i) => {
-            const item = document.createElement('li'); item.className = 'list-group-item text-break' + (i === 0 ? ' list-group-item-success fw-semibold' : ''); item.textContent = p.nombre + (p.tipo === 'deposito' ? ' · Depósito final' : '') + (i === 0 ? ' · Próximo punto' : ''); lista.append(item);
-        });
-        const primero = pendientes[0];
-        recolectar.disabled = !!avance.completada || !primero || primero.tipo !== 'contenedor';
-        incidencia.disabled = !ruta || !!avance.completada || !primero;
-        completar.disabled = !ruta || !!avance.completada || !pendientes.length;
-        deposito.classList.toggle('d-none', !!avance.completada || !primero || primero.tipo !== 'deposito');
-        const mensaje = document.getElementById('mensajeChofer'); mensaje.classList.toggle('d-none', !ruta || (!avance.completada && pendientes.length > 0));
-        mensaje.textContent = avance.completada ? 'Ruta reportada como completada en esta vista previa. ' + pendientes.filter(p => p.tipo === 'contenedor').length + ' contenedores y ' + pendientes.filter(p => p.tipo === 'deposito').length + ' puntos de depósito quedaron pendientes.' : 'Ruta completada: llegada al depósito confirmada en esta vista previa.';
-        if (!capa) return;
-        const validos = pendientes.filter(puntoChoferValido);
-        if (validos.length > 1) L.polyline(validos.map(p => [p.lat,p.lng]), {color:'#0d6efd', weight:4}).addTo(capa);
-        validos.forEach(p => {const texto = document.createElement('span'); texto.textContent = p.nombre; L.marker([p.lat,p.lng]).bindPopup(texto).addTo(capa);});
-        if (capa.getLayers().length) mapa.fitBounds(capa.getBounds(), {padding:[25,25], maxZoom:15});
-    }
-    function avanzar(accion, reporte = null) {
-        const punto = ruta?.paradas[avance.indice];
-        if (avance.completada || !punto || (accion === 'deposito' ? punto.tipo !== 'deposito' : punto.tipo !== 'contenedor')) return;
-        avance.acciones.push({punto: punto.idContenedor ?? 'deposito', accion, reporte}); avance.indice++; datos.avances[id] = avance; guardarVistaChofer(datos); mostrar();
-    }
-    recolectar.addEventListener('click', () => avanzar('recolectado'));
-    deposito.addEventListener('click', () => avanzar('deposito'));
-    incidencia.addEventListener('click', () => {
-        objetivoReporte = avance.indice;
-        const form = document.getElementById('formIncidenciaChofer'); form.reset();
-        document.getElementById('elementoTipoReporteChofer').value = ruta.paradas[avance.indice].tipo === 'contenedor' ? 'contenedor' : 'vehiculo';
-        actualizarTiposReporte();
-        document.getElementById('elementoReporteChofer').textContent = ruta.paradas[avance.indice].nombre;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalIncidenciaChofer')).show();
-    });
-    document.getElementById('formIncidenciaChofer').addEventListener('submit', e => {
-        e.preventDefault();
-        const descripcion = document.getElementById('descripcionReporteChofer');
-        descripcion.setCustomValidity(descripcion.value.trim() ? '' : 'Describí la incidencia.');
-        if (!e.target.reportValidity()) return;
-        if (objetivoReporte !== avance.indice) return;
-        if (avance.completada) return;
-        const elemento = document.getElementById('elementoTipoReporteChofer').value;
-        const reporte = {elemento, tipo:document.getElementById('tipoReporteChofer').value, descripcion:descripcion.value.trim()};
-        if (elemento === 'contenedor') {
-            if (ruta.paradas[avance.indice]?.tipo !== 'contenedor') return;
-            avanzar('incidencia', reporte);
-        } else {
-            avance.acciones.push({punto: 'vehiculo', accion: 'incidencia', reporte});
-            datos.avances[id] = avance; guardarVistaChofer(datos); mostrar();
-        }
-        objetivoReporte = null;
-        bootstrap.Modal.getInstance(document.getElementById('modalIncidenciaChofer')).hide();
-    });
-    document.getElementById('descripcionReporteChofer').addEventListener('input', e => e.target.setCustomValidity(''));
-    function actualizarTiposReporte() {
-        const elemento = document.getElementById('elementoTipoReporteChofer').value;
-        const tipos = elemento === 'vehiculo' ? ['Vehículo averiado', 'Sistema informático de vehículo defectuoso', 'Sistema de recolección averiado'] : elemento === 'contenedor' ? ['Residuos fuera de contenedor', 'Incendiado', 'Roto', 'Ruta a contenedor obstruida'] : [];
-        const select = document.getElementById('tipoReporteChofer');
-        select.replaceChildren(new Option('Seleccioná un tipo', ''));
-        tipos.forEach(tipo => select.add(new Option(tipo, tipo)));
-        select.disabled = !elemento;
-        const opcion = document.querySelector('#elementoTipoReporteChofer option[value="contenedor"]');
-        opcion.disabled = ruta?.paradas[avance.indice]?.tipo !== 'contenedor';
-        document.getElementById('avisoElementoReporteChofer').textContent = elemento === 'vehiculo' ? 'La incidencia se registra sobre el vehículo; los contenedores pendientes se mantienen.' : elemento === 'contenedor' ? 'La incidencia se registra sobre el primer contenedor pendiente y permite avanzar al siguiente.' : '';
-    }
-    document.getElementById('elementoTipoReporteChofer').addEventListener('change', actualizarTiposReporte);
-    completar.addEventListener('click', () => {
-        if (!ruta || avance.completada) return;
-        const pendientes = ruta.paradas.slice(avance.indice);
-        const contenedores = pendientes.filter(p => p.tipo === 'contenedor').length;
-        const depositos = pendientes.filter(p => p.tipo === 'deposito').length;
-        document.getElementById('avisoCompletarRutaChofer').textContent = 'Aún quedan pendientes de recolección ' + contenedores + ' contenedores y ' + depositos + ' puntos de depósito. ¿Deseás confirmar igualmente la ruta como completada?';
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCompletarRutaChofer')).show();
-    });
-    document.getElementById('confirmarCompletarRutaChofer').addEventListener('click', () => {
-        if (!ruta || avance.completada) return;
-        avance.completada = true;
-        avance.acciones.push({accion: 'ruta_completada', pendientes: ruta.paradas.slice(avance.indice)});
-        datos.avances[id] = avance; guardarVistaChofer(datos); mostrar();
-        bootstrap.Modal.getInstance(document.getElementById('modalCompletarRutaChofer')).hide();
-    });
-    mostrar();
+    document.getElementById('progresoChofer').textContent = 'No hay un recorrido real disponible para registrar avances.';
+    ['recolectarChofer', 'incidenciaChofer', 'depositoChofer', 'completarRutaChofer'].forEach(id => document.getElementById(id).disabled = true);
 }
 
-/* Cuadrillas: catálogos de API, composiciones de vista previa por pestaña.
-   CUADRILLA -> INTEGRA_CUADRILLA (un único responsable operario),
-   CUADRILLA_VEHICULO y ASIGNA_RUTA. Las APIs de estas relaciones aún no existen. */
+/* Gestión de cuadrillas mediante la API. */
 if (document.getElementById('tablaCuadrillas')) {
     (async function inicializarCuadrillas() {
-        const clave = 'sigeru_cuadrillas_vista_previa_v1';
         let cuadrillas = [];
-        try { const previas = JSON.parse(sessionStorage.getItem(clave) || '[]'); if (Array.isArray(previas)) cuadrillas = previas; } catch {}
+        let cargandoCuadrillas = true, errorCargaCuadrillas = "";
         let usuarios = [], vehiculos = [], rutas = [], editando = null, consultando = false;
         const operariosIds = ['responsableCuadrilla', 'operarioCuadrilla1', 'operarioCuadrilla2'];
         const form = document.getElementById('formCuadrilla');
@@ -3229,7 +3199,6 @@ if (document.getElementById('tablaCuadrillas')) {
         const nombre = id => { const u = usuarios.find(u => String(u.idUsu) === String(id)); return u ? [u.nombre1, u.nombre2, u.apellido1, u.apellido2].filter(Boolean).join(' ') : 'Usuario #' + id; };
         const vehiculo = () => vehiculos.find(v => String(v.idVehiculo) === campo('vehiculoCuadrilla').value);
         function error(texto) {campo('errorCuadrilla').textContent = texto; campo('errorCuadrilla').classList.toggle('d-none', !texto);}
-        function guardar() {sessionStorage.setItem(clave, JSON.stringify(cuadrillas));}
         function opciones(select, datos, id, etiqueta, requerido) {
             select.replaceChildren(new Option(requerido ? 'Seleccioná una opción' : 'Sin asignar', ''));
             datos.forEach(d => select.add(new Option(etiqueta(d), d[id])));
@@ -3265,7 +3234,7 @@ if (document.getElementById('tablaCuadrillas')) {
             editando = cuadrilla?.idCuadrilla ?? null; consultando = soloVer; form.reset(); error('');
             campo('tituloCuadrilla').textContent = soloVer ? 'Ver cuadrilla #' + editando : cuadrilla ? 'Editar cuadrilla #' + editando : 'Crear cuadrilla';
             campo('guardarCuadrilla').classList.toggle('d-none', soloVer);
-            campo('guardarCuadrilla').textContent = cuadrilla ? 'Guardar cambios (vista previa)' : 'Crear cuadrilla (vista previa)';
+            campo('guardarCuadrilla').textContent = cuadrilla ? 'Guardar cambios' : 'Crear cuadrilla';
             const disponibles = vehiculos.filter(v => v.estado === 'Disponible' || (cuadrilla && String(v.idVehiculo) === String(cuadrilla.idVehiculo)));
             opciones(campo('vehiculoCuadrilla'), disponibles, 'idVehiculo', v => v.matricula + ' · ' + v.tipo + ' · ' + v.estado, true);
             opciones(campo('choferCuadrilla'), usuarios.filter(u => u.tipo === 'Chofer'), 'idUsu', u => nombre(u.idUsu), true);
@@ -3283,24 +3252,57 @@ if (document.getElementById('tablaCuadrillas')) {
         }
         function dibujar() {
             const tabla = campo('tablaCuadrillas'); tabla.replaceChildren();
-            const buscar = campo('buscarCuadrilla').value.trim().toLocaleLowerCase();
+            const tipo = campo('filtroTipoVehiculoCuadrilla').value;
+            const matricula = campo('filtroMatriculaCuadrilla').value.trim().toLocaleLowerCase();
+            const ruta = campo('filtroRutaCuadrilla').value;
+            const filtrando = !!(tipo || matricula || ruta);
             cuadrillas.forEach(c => {
                 const v = vehiculos.find(v => String(v.idVehiculo) === String(c.idVehiculo));
-                const valores = [c.idCuadrilla, v ? v.matricula + ' · ' + v.tipo : 'Vehículo #' + c.idVehiculo, nombre(c.idChofer), nombre(c.idResponsable), c.operarios.map(nombre).join(', ') || 'Sin adicionales', c.rutas.map(id => rutas.find(r => String(r.idRuta) === String(id))?.descripcion || 'Ruta #' + id).join(', ') || 'Sin asignar'];
-                if (buscar && !valores.join(' ').toLocaleLowerCase().includes(buscar)) return;
+                const valores = [c.idCuadrilla, v ? v.matricula + ' · ' + v.tipo : 'Vehículo #' + c.idVehiculo, nombre(c.idChofer), nombre(c.idResponsable), c.operarios.map(nombre).join(', ') || 'Sin adicionales'];
+                if ((tipo && v?.tipo !== tipo)
+                    || (matricula && !(v?.matricula || '').toLocaleLowerCase().includes(matricula))
+                    || (ruta && !c.rutas.some(id => String(id) === ruta))) return;
                 const fila = document.createElement('tr');
                 valores.forEach(valor => {const td = document.createElement('td'); td.className = 'text-break'; td.textContent = valor; fila.append(td);});
-                const td = document.createElement('td'), grupo = document.createElement('div'); grupo.className = 'd-flex flex-wrap gap-1';
-                [['Ver','primary',()=>abrir(c,true)],['Editar','secondary',()=>abrir(c)],['Eliminar','danger',()=>{if (!confirm('¿Eliminar la cuadrilla #' + c.idCuadrilla + ' de esta vista previa?')) return; cuadrillas = cuadrillas.filter(q => q.idCuadrilla !== c.idCuadrilla); guardar(); dibujar();}]].forEach(([texto,color,accion])=>{const boton = document.createElement('button');boton.type='button';boton.className='btn btn-outline-'+color+' btn-sm';boton.textContent=texto;boton.disabled=!usuarios.length||!vehiculos.length;boton.addEventListener('click',accion);grupo.append(boton);});
+                const celdaRutas = document.createElement('td');
+                if (c.rutas.length) {
+                    const listaRutas = document.createElement('div');
+                    listaRutas.className = 'd-flex flex-column align-items-start gap-1';
+                    c.rutas.forEach(id => {
+                        const etiqueta = document.createElement('span');
+                        etiqueta.className = 'badge text-bg-light border text-dark text-wrap text-start';
+                        etiqueta.textContent = rutas.find(r => String(r.idRuta) === String(id))?.descripcion || 'Ruta #' + id;
+                        listaRutas.append(etiqueta);
+                    });
+                    celdaRutas.append(listaRutas);
+                } else {
+                    celdaRutas.textContent = 'Sin asignar';
+                }
+                fila.append(celdaRutas);
+                const td = document.createElement('td'), grupo = document.createElement('div');
+                td.className = 'text-nowrap';
+                grupo.className = 'btn-group btn-group-sm text-nowrap';
+                grupo.setAttribute('role', 'group');
+                grupo.setAttribute('aria-label', 'Acciones de la cuadrilla ' + c.idCuadrilla);
+                [['Ver','primary',()=>abrir(c,true)],['Editar','secondary',()=>abrir(c)],['Eliminar','danger',async(event)=>{
+                    if (!confirm('¿Eliminar la cuadrilla #' + c.idCuadrilla + '?')) return;
+                    const boton = event.currentTarget; boton.disabled = true;
+                    try {
+                        await apiGestion('cuadrillas/' + c.idCuadrilla, 'DELETE');
+                        cuadrillas = cuadrillas.filter(q => q.idCuadrilla !== c.idCuadrilla); dibujar();
+                    } catch (err) { alert(err.message); boton.disabled = false; }
+                }]].forEach(([texto,color,accion])=>{const boton = document.createElement('button');boton.type='button';boton.className='btn btn-outline-'+color+' btn-sm';boton.textContent=texto;boton.disabled=!usuarios.length||!vehiculos.length;boton.addEventListener('click',accion);grupo.append(boton);});
                 td.append(grupo);fila.append(td);tabla.append(fila);
             });
-            if (!tabla.children.length) {const td = tabla.insertRow().insertCell();td.colSpan=7;td.className='text-center text-body-secondary py-4';td.textContent=buscar?'No hay cuadrillas que coincidan con la búsqueda.':'No hay cuadrillas en esta vista previa.';}
+            if (!tabla.children.length) {const td = tabla.insertRow().insertCell();td.colSpan=7;td.className='text-center text-body-secondary py-4';td.textContent=cargandoCuadrillas?'Cargando cuadrillas...':errorCargaCuadrillas||(filtrando?'No hay cuadrillas que coincidan con los filtros.':'No hay cuadrillas registradas.');}
         }
-        campo('buscarCuadrilla').addEventListener('input',dibujar);
+        campo('filtroTipoVehiculoCuadrilla').addEventListener('change',dibujar);
+        campo('filtroMatriculaCuadrilla').addEventListener('input',dibujar);
+        campo('filtroRutaCuadrilla').addEventListener('change',dibujar);
         campo('crearCuadrilla').addEventListener('click',()=>abrir());
         campo('vehiculoCuadrilla').addEventListener('change',actualizarVehiculo);
         operariosIds.forEach(id=>campo(id).addEventListener('change',actualizarIntegrantes));
-        form.addEventListener('submit', e => {
+        form.addEventListener('submit', async e => {
             e.preventDefault(); error(''); if(consultando||!form.reportValidity())return;
             const v = vehiculo();
             if(!v||v.estado!=='Disponible')return error('Seleccioná un vehículo disponible.');
@@ -3313,26 +3315,37 @@ if (document.getElementById('tablaCuadrillas')) {
             if(operarios.length>(v.tipo==='Camioneta'?2:0)||operarios.some(id=>!usuarios.some(u=>Number(u.idUsu)===id&&u.tipo==='Operario')))return error('Revisá los operarios y el cupo del vehículo.');
             const idsRutas=[...campo('rutasFormularioCuadrilla').querySelectorAll('input:checked')].map(i=>Number(i.value));
             if(idsRutas.some(id=>!rutas.some(r=>Number(r.idRuta)===id&&compatible(r))))return error('Hay rutas incompatibles con el vehículo.');
-            const c={idCuadrilla:editando??Math.max(0,...cuadrillas.map(c=>c.idCuadrilla))+1,idVehiculo:Number(v.idVehiculo),idChofer:Number(chofer.idUsu),idResponsable:Number(responsable.idUsu),operarios,rutas:idsRutas};
-            if(editando!==null)cuadrillas=cuadrillas.map(q=>q.idCuadrilla===editando?c:q);else cuadrillas.push(c);
-            guardar();dibujar();bootstrap.Modal.getInstance(campo('modalCuadrilla')).hide();
+            const payload={idVehiculo:Number(v.idVehiculo),idChofer:Number(chofer.idUsu),idResponsable:Number(responsable.idUsu),operarios,rutas:idsRutas};
+            const idActual = editando;
+            campo('guardarCuadrilla').disabled = true;
+            try {
+                const c = await apiGestion('cuadrillas' + (idActual !== null ? '/' + idActual : ''), idActual !== null ? 'PUT' : 'POST', payload);
+                if(idActual!==null)cuadrillas=cuadrillas.map(q=>q.idCuadrilla===idActual?c:q);else cuadrillas.push(c);
+                dibujar();bootstrap.Modal.getInstance(campo('modalCuadrilla')).hide();
+            } catch (err) { error(err.message); }
+            finally { campo('guardarCuadrilla').disabled = false; }
+
         });
         dibujar();
-        async function catalogo(endpoint) {
-            const respuesta=await fetch('http://localhost:8000/api/'+endpoint,{headers:{Accept:'application/json',Authorization:'Bearer '+getToken()}});
-            if(!respuesta.ok)throw Error('No se pudo consultar '+endpoint);
-            const resultado=await respuesta.json();if(!Array.isArray(resultado.data))throw Error('Respuesta inválida de '+endpoint);return resultado.data;
-        }
-        const resultados=await Promise.allSettled([catalogo('usuarios'),catalogo('camiones'),catalogo('rutas')]);
+        async function catalogo(endpoint) { return apiGestion(endpoint); }
+        const resultados=await Promise.allSettled([catalogo('usuarios'),catalogo('camiones'),catalogo('rutas'),catalogo('cuadrillas')]);
         usuarios=resultados[0].status==='fulfilled'?resultados[0].value:[];
         vehiculos=resultados[1].status==='fulfilled'?resultados[1].value:[];
         rutas=resultados[2].status==='fulfilled'?resultados[2].value:[];
-        const faltan=resultados.flatMap((r,i)=>r.status==='rejected'?[['usuarios','vehículos','rutas'][i]]:[]);
+        cuadrillas=resultados[3].status==='fulfilled'?resultados[3].value:[];
+        const filtroTipo = campo('filtroTipoVehiculoCuadrilla');
+        [...new Set(vehiculos.map(v => v.tipo).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es')).forEach(tipo => filtroTipo.add(new Option(tipo, tipo)));
+        const filtroRuta = campo('filtroRutaCuadrilla');
+        rutas.forEach(r => filtroRuta.add(new Option('Ruta #' + r.idRuta + ' · ' + r.descripcion, r.idRuta)));
+
+        const faltan=resultados.flatMap((r,i)=>r.status==='rejected'?[['usuarios','vehículos','rutas','cuadrillas'][i]]:[]);
         const disponibles=vehiculos.filter(v=>v.estado==='Disponible');
         const listo=disponibles.length&&usuarios.some(u=>u.tipo==='Chofer')&&usuarios.some(u=>u.tipo==='Operario');
-        campo('crearCuadrilla').disabled=!listo;
-        const estado=campo('estadoCatalogosCuadrilla');estado.className='alert text-start '+(faltan.length||!listo?'alert-warning':'alert-success');
-        estado.textContent=faltan.length?'No se pudieron cargar: '+faltan.join(', ')+'.':!listo?'Para crear una cuadrilla se necesita un vehículo disponible, un chofer y un operario.':'Catálogos disponibles. Podés crear y editar cuadrillas en esta vista previa.';
+        campo('crearCuadrilla').disabled=!listo || faltan.length > 0;
+        cargandoCuadrillas = false;
+        if (resultados[3].status === 'rejected') {
+            errorCargaCuadrillas = 'No se pudieron cargar las cuadrillas. ' + resultados[3].reason.message;
+        }
         dibujar();
     })();
 }

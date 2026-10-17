@@ -1,18 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Cuadrillas · SIGERU</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="assets/style.css?v=mobile-20261011-1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuadrillas · SIGERU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css?v=mobile-20261011-1">
 </head>
+
 <body>
-<div id="navbar-container"></div>
-<main class="container px-2 px-sm-3 pb-4">
-<h1>Gestión de cuadrillas</h1><h5>Vehículos, integrantes y rutas asignadas</h5>
-<div class="alert alert-info text-start">Vista previa: las cuadrillas creadas y editadas se guardan solo en esta pestaña. Los vehículos, usuarios y rutas se consultan del sistema.</div>
-<div id="estadoCatalogosCuadrilla" class="alert alert-secondary text-start" role="status">Cargando vehículos, usuarios y rutas...</div>
-<div class="row g-2 mb-3 text-start"><div class="col-12 col-md-8"><label for="buscarCuadrilla" class="visually-hidden">Buscar cuadrilla</label><input id="buscarCuadrilla" type="search" class="form-control" placeholder="Buscar por ID, matrícula o integrante..."></div><div class="col-12 col-md-4 d-grid d-md-block text-md-end"><button id="crearCuadrilla" class="btn btn-primary" type="button" disabled>Crear cuadrilla</button></div></div>
-<div class="card shadow-sm text-start"><div class="card-header bg-success text-white"><h2 class="h5 mb-0">Listado de cuadrillas</h2></div><div class="card-body p-2 p-sm-3"><div class="table-responsive" tabindex="0" role="region" aria-label="Listado de cuadrillas"><table class="table table-striped table-hover align-middle mb-0"><thead><tr><th>ID</th><th>Vehículo</th><th>Chofer</th><th>Operario responsable</th><th>Otros operarios</th><th>Rutas</th><th>Acciones</th></tr></thead><tbody id="tablaCuadrillas"></tbody></table></div></div></div>
-</main>
-<div class="modal fade" id="modalCuadrilla" tabindex="-1" aria-labelledby="tituloCuadrilla" aria-hidden="true" data-bs-backdrop="static"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down"><form id="formCuadrilla" class="modal-content"><div class="modal-header bg-success text-white"><h2 id="tituloCuadrilla" class="modal-title fs-5">Crear cuadrilla</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body text-start"><p class="small text-body-secondary">Un chofer y un operario responsable son obligatorios. Solo las camionetas permiten hasta dos operarios adicionales, sin responsabilidad.</p><div class="row"><div class="col-12 col-md-6 mb-3"><label for="vehiculoCuadrilla" class="form-label">Vehículo disponible</label><select id="vehiculoCuadrilla" class="form-select" required><option value="">Seleccioná una opción</option></select></div><div class="col-12 col-md-6 mb-3"><label for="choferCuadrilla" class="form-label">Chofer</label><select id="choferCuadrilla" class="form-select" required><option value="">Seleccioná una opción</option></select></div><div class="col-12 col-md-6 mb-3"><label for="responsableCuadrilla" class="form-label">Operario responsable</label><select id="responsableCuadrilla" class="form-select" required><option value="">Seleccioná una opción</option></select></div></div><p id="cupoCuadrilla" class="small text-body-secondary" role="status"></p><div id="extrasCamionetaCuadrilla" class="row d-none"><div class="col-12 col-md-6 mb-3"><label for="operarioCuadrilla1" class="form-label">Operario adicional 1</label><select id="operarioCuadrilla1" class="form-select" ><option value="">Sin asignar</option></select></div><div class="col-12 col-md-6 mb-3"><label for="operarioCuadrilla2" class="form-label">Operario adicional 2</label><select id="operarioCuadrilla2" class="form-select" ><option value="">Sin asignar</option></select></div></div><fieldset><legend class="fs-6">Rutas asignadas (opcional)</legend><div id="rutasFormularioCuadrilla" class="d-flex flex-column gap-2"></div><p class="form-text">Se muestran rutas compatibles con el vehículo. Las asignaciones se conservan únicamente en esta vista previa.</p></fieldset><div id="errorCuadrilla" class="alert alert-danger mt-3 d-none" role="alert"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button><button id="guardarCuadrilla" type="submit" class="btn btn-primary">Crear cuadrilla (vista previa)</button></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script><script src="assets/script.js?v=flota-20261011-1"></script>
-</body></html>
+    <div id="navbar-container"></div>
+    <main class="container px-2 px-sm-3 pb-4">
+        <h1>Gestión de cuadrillas</h1>
+        <div class="row g-2 mb-3 text-start align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="filtroTipoVehiculoCuadrilla" class="form-label">Tipo de vehículo</label>
+                <select id="filtroTipoVehiculoCuadrilla" class="form-select"><option value="">Todos los tipos</option></select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="filtroMatriculaCuadrilla" class="form-label">Matrícula</label>
+                <input id="filtroMatriculaCuadrilla" type="search" class="form-control" placeholder="Buscar matrícula...">
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="filtroRutaCuadrilla" class="form-label">Ruta</label>
+                <select id="filtroRutaCuadrilla" class="form-select"><option value="">Todas las rutas</option></select>
+            </div>
+            <div class="col-12 col-md-3 d-grid">
+                <button id="crearCuadrilla" class="btn btn-primary" type="button" disabled>Crear cuadrilla</button>
+            </div>
+        </div>
+        <div class="card shadow-sm text-start">
+            <div class="card-header bg-success text-white">
+                <h2 class="h5 mb-0">Listado de cuadrillas</h2>
+            </div>
+            <div class="card-body p-2 p-sm-3">
+                <div class="table-responsive" tabindex="0" role="region" aria-label="Listado de cuadrillas">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Vehículo</th>
+                                <th>Chofer</th>
+                                <th>Responsable</th>
+                                <th>Operarios</th>
+                                <th>Rutas</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCuadrillas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="modal fade" id="modalCuadrilla" tabindex="-1" aria-labelledby="tituloCuadrilla" aria-hidden="true"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <form id="formCuadrilla" class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h2 id="tituloCuadrilla" class="modal-title fs-5">Crear cuadrilla</h2><button type="button"
+                        class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3"><label for="vehiculoCuadrilla" class="form-label">Vehículo
+                                disponible</label><select id="vehiculoCuadrilla" class="form-select" required>
+                                <option value="">Seleccioná una opción</option>
+                            </select></div>
+                        <div class="col-12 col-md-6 mb-3"><label for="choferCuadrilla"
+                                class="form-label">Chofer</label><select id="choferCuadrilla" class="form-select"
+                                required>
+                                <option value="">Seleccioná una opción</option>
+                            </select></div>
+                        <div class="col-12 col-md-6 mb-3"><label for="responsableCuadrilla" class="form-label">Operario
+                                responsable</label><select id="responsableCuadrilla" class="form-select" required>
+                                <option value="">Seleccioná una opción</option>
+                            </select></div>
+                    </div>
+                    <p id="cupoCuadrilla" class="small text-body-secondary" role="status"></p>
+                    <div id="extrasCamionetaCuadrilla" class="row d-none">
+                        <div class="col-12 col-md-6 mb-3"><label for="operarioCuadrilla1" class="form-label">Operario
+                                adicional 1</label><select id="operarioCuadrilla1" class="form-select">
+                                <option value="">Sin asignar</option>
+                            </select></div>
+                        <div class="col-12 col-md-6 mb-3"><label for="operarioCuadrilla2" class="form-label">Operario
+                                adicional 2</label><select id="operarioCuadrilla2" class="form-select">
+                                <option value="">Sin asignar</option>
+                            </select></div>
+                    </div>
+                    <fieldset>
+                        <legend class="fs-6">Rutas asignadas (opcional)</legend>
+                        <div id="rutasFormularioCuadrilla" class="d-flex flex-column gap-2"></div>
+                    </fieldset>
+                    <div id="errorCuadrilla" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cerrar</button><button id="guardarCuadrilla" type="submit"
+                        class="btn btn-primary">Crear cuadrilla</button></div>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/script.js?v=cuadrillas-rutas-etiquetas-20261013-3"></script>
+</body>
+
+</html>

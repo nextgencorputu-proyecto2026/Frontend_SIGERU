@@ -1,7 +1,7 @@
 <nav class="navbar navbar-dark bg-dark fixed-top">
 
         <div class="container-fluid flex-nowrap gap-2">
-<a class="navbar-brand mb-0 d-lg-none ms-auto" href="home.html">SIGERU</a>
+                <a class="navbar-brand mb-0 d-lg-none ms-auto" href="home.html">SIGERU</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
                         data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar"
@@ -40,264 +40,224 @@
         </div>
 
 </nav>
-<div class="offcanvas offcanvas-start text-bg-dark"
-                        style="width: min(320px, 90vw) !important;" tabindex="-1"
-                        id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+<div class="offcanvas offcanvas-start text-bg-dark" style="width: min(320px, 90vw) !important;" tabindex="-1"
+        id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
 
 
-                        <div class="offcanvas-header">
+        <div class="offcanvas-header">
 
-                                <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">
+                <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">
 
-                                        SIGERU
+                        SIGERU
 
-                                </h5>
-
-
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                                        aria-label="Close">
-                                </button>
-
-                        </div>
+                </h5>
 
 
-                        <div class="offcanvas-body d-flex flex-column">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close">
+                </button>
 
-                                <ul class="navbar-nav flex-grow-1 pe-0">
+        </div>
 
 
-                                        <!-- INICIO -->
+        <div class="offcanvas-body d-flex flex-column">
 
-                                        <li class="nav-item">
+                <ul class="navbar-nav flex-grow-1 pe-0">
 
-                                                <a class="nav-link" href="home.html" role="button">
 
-                                                        Inicio
+                        <!-- INICIO -->
+
+                        <li class="nav-item">
+
+                                <a class="nav-link" href="home.html" role="button">
+
+                                        Inicio
+
+                                </a>
+
+                        </li>
+
+
+                        <!-- CONTENEDORES -->
+
+                        <li class="nav-item dropdown">
+
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+
+                                        Contenedores
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a id="Mapa_Contenedores" class="dropdown-item text-wrap text-break"
+                                                        href="mapaContenedores.html">
+
+                                                        Mapa Contenedores
 
                                                 </a>
+                                        </li>
 
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break"
+                                                        href="listaContenedores.html">
+
+                                                        Lista Contenedores
+
+                                                </a>
+                                        </li>
+
+                                </ul>
+
+                        </li>
+
+
+                        <!-- CAMIONES -->
+
+                        <li class="nav-item dropdown">
+
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+
+                                        Camiones
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break" href="listaCamiones.html">
+
+                                                        Lista Camiones
+
+                                                </a>
                                         </li>
 
 
-                                        <!-- CONTENEDORES -->
+                                </ul>
 
-                                        <li class="nav-item dropdown">
+                        </li>
 
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
-                                                        Contenedores
+                        <!-- RUTAS -->
+
+                        <li class="nav-item dropdown">
+
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+
+                                        Rutas
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break"
+                                                        href="listaRutas.html">Lista Rutas
 
                                                 </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a id="Mapa_Contenedores" class="dropdown-item text-wrap text-break"
-                                                                        href="mapaContenedores.html">
-
-                                                                        Mapa Contenedores
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaContenedores.html#altaContenedorModal">
-
-                                                                        Alta Contenedores
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaContenedores.html">
-
-                                                                        Lista Contenedores
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
                                         </li>
 
 
-                                        <!-- CAMIONES -->
+                                </ul>
 
-                                        <li class="nav-item dropdown">
-
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-
-                                                        Camiones
-
-                                                </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaCamiones.html">
-
-                                                                        Lista Camiones
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaCamiones.html#altaCamionModal">
-
-                                                                        Alta Camiones
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
-                                        </li>
+                        </li>
 
 
-                                        <!-- RUTAS -->
+                        <!-- PERSONAL -->
 
-                                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
 
-                                                        Rutas
+                                        Personal
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break" href="listaUsuarios.html">
+
+                                                        Lista Usuarios
 
                                                 </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaRutas.html">Lista Rutas
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaRutas.html#nuevaRuta">Alta Rutas
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
                                         </li>
 
+                                </ul>
 
-                                        <!-- PERSONAL -->
+                        </li>
 
-                                        <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                        <!-- CENTROS DE ACOPIO -->
 
-                                                        Personal
+                        <li class="nav-item dropdown">
+
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+
+                                        Centros de acopio
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break" href="listaCentros.html">
+
+                                                        Lista de Centros
 
                                                 </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaUsuarios.html">
-
-                                                                        Lista Usuarios
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaUsuarios.html#altaUsuarioModal">
-
-                                                                        Registrar Usuario
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
                                         </li>
 
+                                </ul>
 
-                                        <!-- CENTROS DE ACOPIO -->
+                        </li>
 
-                                        <li class="nav-item dropdown">
 
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                        <!-- MAQUINARIA -->
 
-                                                        Centros de acopio
+                        <li class="nav-item dropdown">
+
+                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
+                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+
+                                        Maquinaria
+
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
+
+                                        <li>
+                                                <a class="dropdown-item text-wrap text-break"
+                                                        href="listaMaquinaria.html">
+
+                                                        Lista de Maquinaria
 
                                                 </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaCentros.html">
-
-                                                                        Lista de Centros
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaCentros.html#altaCentroModal">
-
-                                                                        Registrar Centro
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
                                         </li>
 
+                                </ul>
 
-                                        <!-- MAQUINARIA -->
-
-                                        <li class="nav-item dropdown">
-
-                                                <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
-                                                        data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-
-                                                        Maquinaria
-
-                                                </a>
-
-                                                <ul class="dropdown-menu dropdown-menu-dark position-static w-100">
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaMaquinaria.html">
-
-                                                                        Lista de Maquinaria
-
-                                                                </a>
-                                                        </li>
-
-                                                        <li>
-                                                                <a class="dropdown-item text-wrap text-break" href="listaMaquinaria.html#altaMaquinariaModal">
-
-                                                                        Registrar Maquinaria
-
-                                                                </a>
-                                                        </li>
-
-                                                </ul>
-
-                                        </li>
+                        </li>
 
 
-                                <li class="nav-item"><a class="nav-link text-wrap" href="listaIncidencias.html">Incidencias</a></li>
-<li class="nav-item"><a class="nav-link text-wrap" href="rutasChofer.html">Mis rutas</a></li>
-<li class="nav-item"><a class="nav-link text-wrap" href="listaCuadrillas.html">Cuadrillas</a></li>
-</ul>
-<div class="d-grid gap-2 d-lg-none mt-4 pt-3 border-top border-secondary">
-<span class="text-white-50">Usuario</span>
-<a href="home.html" target="_blank" class="btn btn-outline-light">Nueva página</a>
-<a href="login.html" id="btnLogoutMobile" class="btn btn-danger" onclick="localStorage.removeItem('access_token');">Cerrar sesión</a>
-</div>
-
-                        </div>
-
+                        <li class="nav-item"><a class="nav-link text-wrap" href="listaIncidencias.html">Incidencias</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link text-wrap" href="rutasChofer.html">Mis rutas</a></li>
+                        <li class="nav-item"><a class="nav-link text-wrap" href="listaCuadrillas.html">Cuadrillas</a>
+                        </li>
+                </ul>
+                <div class="d-grid gap-2 d-lg-none mt-4 pt-3 border-top border-secondary">
+                        <span class="text-white-50">Usuario</span>
+                        <a href="home.html" target="_blank" class="btn btn-outline-light">Nueva página</a>
+                        <a href="login.html" id="btnLogoutMobile" class="btn btn-danger"
+                                onclick="localStorage.removeItem('access_token');">Cerrar sesión</a>
                 </div>
+
+        </div>
+
+</div>

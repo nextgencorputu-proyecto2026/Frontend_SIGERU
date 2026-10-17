@@ -34,9 +34,8 @@
                         </div>
                         <div class="row g-2 mt-1">
                             <div class="col-6"><button id="editarRuta" class="btn btn-secondary w-100" type="button" aria-controls="columnaFormularioRuta" disabled>Editar</button></div>
-                            <div class="col-6"><button class="btn btn-danger w-100" type="button" disabled aria-describedby="estadoAccionesRuta">Eliminar</button></div>
+                            <div class="col-6"><button class="btn btn-danger w-100" type="button" disabled>Eliminar</button></div>
                         </div>
-                        <p id="estadoAccionesRuta" class="form-text mb-0">El guardado y la eliminación estarán disponibles al habilitar estas funciones en el sistema.</p>
                     </div>
                 </div>
             </section>
@@ -45,9 +44,8 @@
                     <div class="card-header bg-success text-white"><h2 id="tituloMapaRutas" class="h5 mb-0">Mapa de rutas</h2></div>
                     <div class="card-body p-2 p-sm-3">
                         <div class="ratio ratio-4x3"><div id="mapaRutas" class="rounded border" aria-label="Mapa de los contenedores asignados a rutas"></div></div>
-                        <p id="detalleMapaRutas" class="form-text mt-2 mb-2" role="status">Seleccione una ruta para destacar sus contenedores.</p>
+                        <p id="detalleMapaRutas" class="form-text mt-2 mb-2" role="status">Al ingresar se muestran todas las rutas disponibles. Seleccione una para destacar sus contenedores.</p>
                         <div id="leyendaRutas" class="d-flex flex-wrap gap-2" aria-label="Leyenda de rutas"></div>
-                        <p class="form-text mb-0">El mapa muestra los contenedores asignados a cada ruta. El trazado del recorrido todavía no está disponible.</p>
                     </div>
                 </div>
             </section>
@@ -58,13 +56,13 @@
                         <button id="cerrarFormularioRuta" class="btn-close btn-close-white" type="button" aria-label="Cerrar formulario"></button>
                     </div>
                     <div class="card-body">
+                        <p id="estadoGuardadoRuta" class="form-text" role="status">El guardado de rutas aún no está disponible.</p>
                         <form id="formRuta">
                             <div class="mb-3"><label for="descripcionRuta" class="form-label">Descripción</label><input id="descripcionRuta" name="descripcion" class="form-control" type="text" maxlength="120" placeholder="Nombre o descripción de la ruta" required></div>
                             <div class="mb-3"><label for="horarioRuta" class="form-label">Horario</label><input id="horarioRuta" name="horario" class="form-control" type="text" placeholder="Ej.: 08:00 a 12:00" required></div>
                             <div class="mb-3"><label for="tipoResiduoRuta" class="form-label">Tipo de residuo</label><select id="tipoResiduoRuta" name="tipoResiduo" class="form-select" required><option value="">Seleccione un tipo</option><option value="Mixtos">Mixtos</option><option value="Reciclables">Reciclables</option></select></div>
                             <div class="mb-3"><label for="contenedoresRuta" class="form-label">Contenedores asignados</label><input id="contenedoresRuta" class="form-control" type="text" value="0" readonly></div>
                             <div class="mb-3"><label for="identificadorRuta" class="form-label">Identificador</label><input id="identificadorRuta" class="form-control" type="text" placeholder="Se asignará al guardar" readonly></div>
-                            <p id="estadoGuardadoRuta" class="alert alert-info small">Puede completar el formulario. El guardado estará disponible al habilitar el alta de rutas.</p>
                             <div class="d-grid gap-2">
                                 <button id="guardarRuta" class="btn btn-success" type="submit" disabled aria-describedby="estadoGuardadoRuta">Guardar</button>
                                 <button id="cancelarRuta" class="btn btn-secondary" type="button">Cancelar</button>
@@ -76,7 +74,7 @@
         </div>
     </main>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="assets/script.js?v=flota-20261011-1"></script>
+    <script src="assets/script.js?v=rutas-sin-avisos-20261012-2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>

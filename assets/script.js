@@ -2,7 +2,7 @@
 try {
     sessionStorage.removeItem('sigeru_cuadrillas_vista_previa_v1');
     sessionStorage.removeItem('sigeru_chofer_vista_previa_v1');
-} catch {}
+} catch { }
 /* ---------------------
     CONFIGURACIÓN JWT
 --------------------- */
@@ -35,7 +35,7 @@ async function cargarCentrosEnSelect(selectId, mensajeId = null, formulario = nu
     select.innerHTML = '<option value="" selected disabled>Cargando centros...</option>';
 
     try {
-        const respuesta = await fetch("http://localhost:8000/api/centros-acopio", {
+        const respuesta = await fetch("http://localhost:8002/api/centros-acopio", {
             headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() }
         });
         const resultado = await respuesta.json();
@@ -69,7 +69,7 @@ async function cargarRutasEnSelect(selectId, tipoResiduo, valorSeleccionado = ""
 
     try {
         const respuesta = await fetch(
-            "http://localhost:8000/api/rutas?tipoResiduo=" + encodeURIComponent(tipoResiduo),
+            "http://localhost:8003/api/rutas?tipoResiduo=" + encodeURIComponent(tipoResiduo),
             { headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() } }
         );
         const resultado = await respuesta.json();
@@ -104,7 +104,37 @@ function handleUnauthorized(respuesta) {
 
     return false;
 }
+/* ---------------------
+   CONFIGURACIÓN DE APIS
+--------------------- */
 
+const API_URLS = {
+    usuarios: "http://localhost:8001/api",
+    gestion: "http://localhost:8002/api",
+    recoleccion: "http://localhost:8003/api"
+};
+
+function obtenerUrlApi(endpoint) {
+    const recurso = endpoint.split("?")[0].split("/")[0];
+
+    const recursosUsuarios = ["auth", "usuarios", "cuadrillas"];
+    const recursosGestion = ["camiones", "centros-acopio", "maquinarias"];
+    const recursosRecoleccion = ["contenedores", "rutas", "incidencias"];
+
+    if (recursosUsuarios.includes(recurso)) {
+        return API_URLS.usuarios + "/" + endpoint;
+    }
+
+    if (recursosGestion.includes(recurso)) {
+        return API_URLS.gestion + "/" + endpoint;
+    }
+
+    if (recursosRecoleccion.includes(recurso)) {
+        return API_URLS.recoleccion + "/" + endpoint;
+    }
+
+    throw new Error("Endpoint de API desconocido: " + endpoint);
+}
 
 /* ---------------------
     CONTROL GENERAL DE 401
@@ -195,7 +225,7 @@ if (BusquedaCamiones) {
 
         const matricula = document.getElementById("inputMatricula").value.trim();
 
-        let url = "http://127.0.0.1:8000/api/camiones";
+        let url = "http://localhost:8002/api/camiones";
 
         if (matricula !== "") {
             url += "?matricula=" + matricula;
@@ -236,47 +266,47 @@ function cargarTabla(camiones) {
     const filtro = document.getElementById('inputMatricula')?.value.trim().toLocaleLowerCase() || '';
     datos.filter(c => !filtro || String(c.matricula).toLocaleLowerCase().includes(filtro)).forEach(camion => {
         const fila = document.createElement('tr');
-        [camion.idVehiculo, camion.matricula, camion.marca, camion.tipo, camion.estado, camion.capacidad == null ? 'No aplica' : camion.capacidad + ' kg'].forEach(valor => {const td=document.createElement('td');td.className='text-break';td.textContent=valor;fila.append(td);});
-        const td=document.createElement('td'),grupo=document.createElement('div');grupo.className='d-flex flex-wrap gap-1';
-        [['Ver','primary','verDatos'],['Editar','secondary','editarCamion'],['Eliminar','danger','eliminarCamion']].forEach(([texto,color,clase])=>{const boton=document.createElement('button');boton.type='button';boton.className=clase+' btn btn-outline-'+color+' btn-sm';boton.dataset.id=camion.idVehiculo;boton.textContent=texto;if(texto==='Ver'){boton.dataset.bsToggle='modal';boton.dataset.bsTarget='#datosCamiones';}grupo.append(boton);});
-        td.append(grupo);fila.append(td);tabla.append(fila);
+        [camion.idVehiculo, camion.matricula, camion.marca, camion.tipo, camion.estado, camion.capacidad == null ? 'No aplica' : camion.capacidad + ' kg'].forEach(valor => { const td = document.createElement('td'); td.className = 'text-break'; td.textContent = valor; fila.append(td); });
+        const td = document.createElement('td'), grupo = document.createElement('div'); grupo.className = 'd-flex flex-wrap gap-1';
+        [['Ver', 'primary', 'verDatos'], ['Editar', 'secondary', 'editarCamion'], ['Eliminar', 'danger', 'eliminarCamion']].forEach(([texto, color, clase]) => { const boton = document.createElement('button'); boton.type = 'button'; boton.className = clase + ' btn btn-outline-' + color + ' btn-sm'; boton.dataset.id = camion.idVehiculo; boton.textContent = texto; if (texto === 'Ver') { boton.dataset.bsToggle = 'modal'; boton.dataset.bsTarget = '#datosCamiones'; } grupo.append(boton); });
+        td.append(grupo); fila.append(td); tabla.append(fila);
     });
-    if(!tabla.children.length){const td=tabla.insertRow().insertCell();td.colSpan=7;td.className='text-center text-body-secondary';td.textContent='No hay vehículos que coincidan con la búsqueda.';}
+    if (!tabla.children.length) { const td = tabla.insertRow().insertCell(); td.colSpan = 7; td.className = 'text-center text-body-secondary'; td.textContent = 'No hay vehículos que coincidan con la búsqueda.'; }
 }
 
 async function consultarRutasFlota(selectId, tipo) {
-    const select=document.getElementById(selectId);
-    if(!select)return;
-    const version=String(Number(select.dataset.version||0)+1);select.dataset.version=version;
-    select.replaceChildren(new Option('Cargando rutas...', ''));select.disabled=true;
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const version = String(Number(select.dataset.version || 0) + 1); select.dataset.version = version;
+    select.replaceChildren(new Option('Cargando rutas...', '')); select.disabled = true;
     try {
-        const residuo=tipo==='Camión recolector mixtos'?'Mixtos':tipo==='Camión recolector reciclables'?'Reciclables':'';
-        const respuesta=await fetch('http://localhost:8000/api/rutas'+(residuo?'?tipoResiduo='+encodeURIComponent(residuo):''),{headers:{Accept:'application/json',Authorization:'Bearer '+getToken()}});
-        const resultado=await respuesta.json();if(select.dataset.version!==version)return;
-        if(!respuesta.ok||!Array.isArray(resultado.data))throw Error('No se pudieron consultar rutas');
+        const residuo = tipo === 'Camión recolector mixtos' ? 'Mixtos' : tipo === 'Camión recolector reciclables' ? 'Reciclables' : '';
+        const respuesta = await fetch('http://localhost:8003/api/rutas' + (residuo ? '?tipoResiduo=' + encodeURIComponent(residuo) : ''), { headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() } });
+        const resultado = await respuesta.json(); if (select.dataset.version !== version) return;
+        if (!respuesta.ok || !Array.isArray(resultado.data)) throw Error('No se pudieron consultar rutas');
         select.replaceChildren(new Option('Sin asignación disponible', ''));
-        resultado.data.forEach(r=>select.add(new Option(r.descripcion+' · '+r.horario,r.idRuta)));
-    }catch(error){if(select.dataset.version!==version)return;select.replaceChildren(new Option('No se pudieron cargar las rutas',''));}
-    finally{if(select.dataset.version===version)select.disabled=selectId==='ruta'&&document.getElementById('btnGuardarCamion').classList.contains('d-none');}
+        resultado.data.forEach(r => select.add(new Option(r.descripcion + ' · ' + r.horario, r.idRuta)));
+    } catch (error) { if (select.dataset.version !== version) return; select.replaceChildren(new Option('No se pudieron cargar las rutas', '')); }
+    finally { if (select.dataset.version === version) select.disabled = selectId === 'ruta' && document.getElementById('btnGuardarCamion').classList.contains('d-none'); }
 }
 function actualizarCapacidadFlotaEditada() {
-    const capacidad=document.getElementById('capacidad');
-    const editando=!document.getElementById('btnGuardarCamion').classList.contains('d-none');
-    const aplica=!['Camioneta','Barredora'].includes(document.getElementById('tipo').value);
-    capacidad.disabled=!aplica;capacidad.required=aplica&&editando;capacidad.readOnly=!editando;
-    if(!aplica)capacidad.value='';
+    const capacidad = document.getElementById('capacidad');
+    const editando = !document.getElementById('btnGuardarCamion').classList.contains('d-none');
+    const aplica = !['Camioneta', 'Barredora'].includes(document.getElementById('tipo').value);
+    capacidad.disabled = !aplica; capacidad.required = aplica && editando; capacidad.readOnly = !editando;
+    if (!aplica) capacidad.value = '';
 }
-if(document.getElementById('tablaCamiones')){
-    document.getElementById('tipo').addEventListener('change',()=>{actualizarCapacidadFlotaEditada();consultarRutasFlota('ruta',document.getElementById('tipo').value);});
-    document.getElementById('altaCamion_tipo').addEventListener('change',()=>consultarRutasFlota('altaCamion_ruta',document.getElementById('altaCamion_tipo').value));
-    document.getElementById('altaCamionModal').addEventListener('show.bs.modal',()=>consultarRutasFlota('altaCamion_ruta',document.getElementById('altaCamion_tipo').value));
+if (document.getElementById('tablaCamiones')) {
+    document.getElementById('tipo').addEventListener('change', () => { actualizarCapacidadFlotaEditada(); consultarRutasFlota('ruta', document.getElementById('tipo').value); });
+    document.getElementById('altaCamion_tipo').addEventListener('change', () => consultarRutasFlota('altaCamion_ruta', document.getElementById('altaCamion_tipo').value));
+    document.getElementById('altaCamionModal').addEventListener('show.bs.modal', () => consultarRutasFlota('altaCamion_ruta', document.getElementById('altaCamion_tipo').value));
 }
 
 // Cargar lista de camiones al entrar a la pagina
 
 if (document.getElementById("tablaCamiones")) {
 
-    fetch("http://localhost:8000/api/camiones", {
+    fetch("http://localhost:8002/api/camiones", {
         method: "GET",
         headers: {
             "Accept": "application/json",
@@ -326,7 +356,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/camiones/" + id,
+                "http://localhost:8002/api/camiones/" + id,
                 {
                     method: "GET",
                     headers: {
@@ -386,7 +416,7 @@ document.addEventListener("click", function (e) {
 
         const id = fila.querySelector(".verDatos").getAttribute("data-id");
 
-        fetch("http://localhost:8000/api/camiones/" + id, {
+        fetch("http://localhost:8002/api/camiones/" + id, {
             method: "GET",
             headers: {
                 "Accept": "application/json",
@@ -401,7 +431,7 @@ document.addEventListener("click", function (e) {
                     const camion = resultado.data;
 
                     document.getElementById("matricula").value = camion.matricula;
-                document.getElementById("marcaCamion").value = camion.marca;
+                    document.getElementById("marcaCamion").value = camion.marca;
                     document.getElementById("tipo").value = camion.tipo;
                     document.getElementById("estado").value = camion.estado;
                     document.getElementById("capacidad").value = camion.capacidad ?? "";
@@ -463,7 +493,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/camiones/" + id,
+                "http://localhost:8002/api/camiones/" + id,
                 {
                     method: "PUT",
                     headers: {
@@ -540,7 +570,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/camiones/" + id,
+                "http://localhost:8002/api/camiones/" + id,
                 {
                     method: "DELETE",
                     headers: {
@@ -698,7 +728,7 @@ function cargarTablaCentros(centros) {
 
 if (document.getElementById("tablaCentros")) {
 
-    fetch("http://localhost:8000/api/centros-acopio", {
+    fetch("http://localhost:8002/api/centros-acopio", {
 
         method: "GET",
 
@@ -747,7 +777,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/centros-acopio/" + id,
+                "http://localhost:8002/api/centros-acopio/" + id,
                 {
                     method: "GET",
                     headers: {
@@ -822,7 +852,7 @@ document.addEventListener("click", function (e) {
         const id = e.target.getAttribute("data-id");
 
         fetch(
-            "http://localhost:8000/api/centros-acopio/" + id,
+            "http://localhost:8002/api/centros-acopio/" + id,
             {
                 method: "GET",
                 headers: {
@@ -920,7 +950,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/centros-acopio/" + id,
+                "http://localhost:8002/api/centros-acopio/" + id,
                 {
                     method: "PUT",
                     headers: {
@@ -994,7 +1024,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/centros-acopio/" + id,
+                "http://localhost:8002/api/centros-acopio/" + id,
                 {
                     method: "DELETE",
                     headers: {
@@ -1047,7 +1077,7 @@ if (buscarCentro) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/centros-acopio",
+                "http://localhost:8002/api/centros-acopio",
                 {
                     method: "GET",
                     headers: {
@@ -1131,7 +1161,7 @@ async function cargarMapaContenedores() {
     try {
 
         const respuesta = await fetch(
-            "http://localhost:8000/api/contenedores",
+            "http://localhost:8003/api/contenedores",
             {
                 method: "GET",
                 headers: {
@@ -1288,7 +1318,7 @@ function cargarTablaContenedores(contenedores) {
 
 if (document.getElementById("tablaContenedores")) {
 
-    fetch("http://localhost:8000/api/contenedores", {
+    fetch("http://localhost:8003/api/contenedores", {
 
         method: "GET",
 
@@ -1359,7 +1389,7 @@ if (BusquedaContenedores) {
             try {
 
                 const respuesta = await fetch(
-                    "http://localhost:8000/api/contenedores",
+                    "http://localhost:8003/api/contenedores",
                     {
                         method: "GET",
 
@@ -1445,7 +1475,7 @@ if (BusquedaUsuarios) {
 
         const nombre = document.getElementById("inputNombre").value.trim();
 
-        let url = "http://localhost:8000/api/usuarios";
+        let url = "http://localhost:8001/api/usuarios";
 
         if (nombre !== "") {
             url += "?nombre=" + encodeURIComponent(nombre);
@@ -1543,7 +1573,7 @@ function cargarTablaUsuarios(usuarios) {
 
 if (document.getElementById("tablaUsuarios")) {
 
-    fetch("http://localhost:8000/api/usuarios", {
+    fetch("http://localhost:8001/api/usuarios", {
         method: "GET",
         headers: {
             "Accept": "application/json",
@@ -1599,7 +1629,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/usuarios/" + id,
+                "http://localhost:8001/api/usuarios/" + id,
                 {
                     method: "GET",
                     headers: {
@@ -1656,7 +1686,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/usuarios/" + id,
+                "http://localhost:8001/api/usuarios/" + id,
                 {
                     method: "GET",
                     headers: {
@@ -1741,7 +1771,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/usuarios/" + id,
+                "http://localhost:8001/api/usuarios/" + id,
                 {
                     method: "PUT",
                     headers: {
@@ -1828,7 +1858,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/usuarios/" + id,
+                "http://localhost:8001/api/usuarios/" + id,
                 {
                     method: "DELETE",
                     headers: {
@@ -1994,7 +2024,7 @@ document.addEventListener('DOMContentLoaded', () => {
         establecerEdicionContenedorMapa(true);
         let actualizado = false;
         try {
-            const respuesta = await fetch('http://localhost:8000/api/contenedores/' + id, {
+            const respuesta = await fetch('http://localhost:8003/api/contenedores/' + id, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Bearer ' + getToken() },
                 body: JSON.stringify(datos)
             });
@@ -2021,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         establecerEdicionContenedorMapa(false);
         let eliminado = false;
         try {
-            const respuesta = await fetch('http://localhost:8000/api/contenedores/' + id, {
+            const respuesta = await fetch('http://localhost:8003/api/contenedores/' + id, {
                 method: 'DELETE', headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() }
             });
             const resultado = await respuesta.json();
@@ -2141,7 +2171,7 @@ function cargarTablaMaquinarias(maquinarias) {
 if (document.getElementById("tablaMaquinarias")) {
 
     fetch(
-        "http://localhost:8000/api/maquinarias",
+        "http://localhost:8002/api/maquinarias",
         {
             method: "GET",
             headers: {
@@ -2190,7 +2220,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/maquinarias/" + id,
+                "http://localhost:8002/api/maquinarias/" + id,
                 {
                     method: "GET",
                     headers: {
@@ -2251,7 +2281,7 @@ document.addEventListener("click", async function (e) {
         const id = e.target.getAttribute("data-id");
 
         fetch(
-            "http://localhost:8000/api/maquinarias/" + id,
+            "http://localhost:8002/api/maquinarias/" + id,
             {
                 method: "GET",
                 headers: {
@@ -2348,7 +2378,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/maquinarias/" + id,
+                "http://localhost:8002/api/maquinarias/" + id,
                 {
                     method: "PUT",
                     headers: {
@@ -2423,7 +2453,7 @@ document.addEventListener("click", async function (e) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/maquinarias/" + id,
+                "http://localhost:8002/api/maquinarias/" + id,
                 {
                     method: "DELETE",
                     headers: {
@@ -2479,7 +2509,7 @@ if (buscarMaquinaria) {
         try {
 
             const respuesta = await fetch(
-                "http://localhost:8000/api/maquinarias",
+                "http://localhost:8002/api/maquinarias",
                 {
                     method: "GET",
                     headers: {
@@ -2549,7 +2579,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function actualizarVistaTrasAlta(config) {
-    const respuesta = await fetch('http://localhost:8000/api/' + config.endpoint, {
+    const respuesta = await fetch(obtenerUrlApi(config.endpoint), {
         headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() }
     });
     const resultado = await respuesta.json();
@@ -2599,7 +2629,7 @@ for (const form of document.querySelectorAll('form[data-alta]')) {
         if (!tipo) return;
         select.disabled = true;
         try {
-            const respuesta = await fetch('http://localhost:8000/api/rutas?tipoResiduo=' + encodeURIComponent(tipo), {
+            const respuesta = await fetch('http://localhost:8003/api/rutas?tipoResiduo=' + encodeURIComponent(tipo), {
                 headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() }
             });
             const resultado = await respuesta.json();
@@ -2666,7 +2696,7 @@ for (const form of document.querySelectorAll('form[data-alta]')) {
         const usaFormulario = prefix === 'altaUsuario' || prefix === 'altaContenedor';
         let guardado = false;
         try {
-            const respuesta = await fetch('http://localhost:8000/api/' + config.endpoint, {
+            const respuesta = await fetch(obtenerUrlApi(config.endpoint), {
                 method: 'POST',
                 headers: {
                     'Content-Type': usaFormulario ? 'application/x-www-form-urlencoded' : 'application/json',
@@ -2920,7 +2950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('hashchange', abrirDesdeEnlace);
     abrirDesdeEnlace();
     async function consultar(endpoint) {
-        const respuesta = await fetch('http://localhost:8000/api/' + endpoint, {
+        const respuesta = await fetch(obtenerUrlApi(endpoint), {
             headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() }
         });
         const resultado = await respuesta.json();
@@ -2940,7 +2970,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* Gestión de incidencias mediante la API. */
 async function apiGestion(endpoint, method = 'GET', payload = null) {
-    const respuesta = await fetch('http://localhost:8000/api/' + endpoint, {
+    const respuesta = await fetch(obtenerUrlApi(endpoint), {
         method,
         headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
         ...(payload !== null ? { body: JSON.stringify(payload) } : {})
@@ -3198,7 +3228,7 @@ if (document.getElementById('tablaCuadrillas')) {
         const campo = id => document.getElementById(id);
         const nombre = id => { const u = usuarios.find(u => String(u.idUsu) === String(id)); return u ? [u.nombre1, u.nombre2, u.apellido1, u.apellido2].filter(Boolean).join(' ') : 'Usuario #' + id; };
         const vehiculo = () => vehiculos.find(v => String(v.idVehiculo) === campo('vehiculoCuadrilla').value);
-        function error(texto) {campo('errorCuadrilla').textContent = texto; campo('errorCuadrilla').classList.toggle('d-none', !texto);}
+        function error(texto) { campo('errorCuadrilla').textContent = texto; campo('errorCuadrilla').classList.toggle('d-none', !texto); }
         function opciones(select, datos, id, etiqueta, requerido) {
             select.replaceChildren(new Option(requerido ? 'Seleccioná una opción' : 'Sin asignar', ''));
             datos.forEach(d => select.add(new Option(etiqueta(d), d[id])));
@@ -3206,7 +3236,7 @@ if (document.getElementById('tablaCuadrillas')) {
         function actualizarIntegrantes() {
             operariosIds.forEach(id => {
                 const select = campo(id);
-                [...select.options].forEach(opcion => {opcion.disabled = !!opcion.value && operariosIds.some(otro => otro !== id && !campo(otro).disabled && campo(otro).value === opcion.value);});
+                [...select.options].forEach(opcion => { opcion.disabled = !!opcion.value && operariosIds.some(otro => otro !== id && !campo(otro).disabled && campo(otro).value === opcion.value); });
             });
         }
         function compatible(ruta) {
@@ -3217,7 +3247,7 @@ if (document.getElementById('tablaCuadrillas')) {
         function actualizarVehiculo() {
             const camioneta = vehiculo()?.tipo === 'Camioneta';
             campo('extrasCamionetaCuadrilla').classList.toggle('d-none', !camioneta);
-            ['operarioCuadrilla1','operarioCuadrilla2'].forEach(id => {campo(id).disabled = !camioneta || consultando; if (!camioneta) campo(id).value = '';});
+            ['operarioCuadrilla1', 'operarioCuadrilla2'].forEach(id => { campo(id).disabled = !camioneta || consultando; if (!camioneta) campo(id).value = ''; });
             campo('cupoCuadrilla').textContent = camioneta ? 'Camioneta: hasta dos operarios adicionales, además del responsable y el chofer.' : 'Este vehículo admite únicamente un chofer y un operario responsable.';
             const elegidas = [...campo('rutasFormularioCuadrilla').querySelectorAll('input:checked')].map(i => i.value);
             const lista = campo('rutasFormularioCuadrilla'); lista.replaceChildren();
@@ -3227,7 +3257,7 @@ if (document.getElementById('tablaCuadrillas')) {
                 const label = document.createElement('label'); label.className = 'form-check-label text-break'; label.htmlFor = input.id; label.textContent = r.descripcion + ' · ' + r.tipoResiduo + ' · ' + r.horario;
                 grupo.append(input, label); lista.append(grupo);
             });
-            if (!lista.children.length) {const vacio = document.createElement('p'); vacio.className = 'small text-body-secondary'; vacio.textContent = vehiculo() ? 'No hay rutas compatibles disponibles.' : 'Seleccioná primero un vehículo.'; lista.append(vacio);}
+            if (!lista.children.length) { const vacio = document.createElement('p'); vacio.className = 'small text-body-secondary'; vacio.textContent = vehiculo() ? 'No hay rutas compatibles disponibles.' : 'Seleccioná primero un vehículo.'; lista.append(vacio); }
             actualizarIntegrantes();
         }
         function abrir(cuadrilla = null, soloVer = false) {
@@ -3263,7 +3293,7 @@ if (document.getElementById('tablaCuadrillas')) {
                     || (matricula && !(v?.matricula || '').toLocaleLowerCase().includes(matricula))
                     || (ruta && !c.rutas.some(id => String(id) === ruta))) return;
                 const fila = document.createElement('tr');
-                valores.forEach(valor => {const td = document.createElement('td'); td.className = 'text-break'; td.textContent = valor; fila.append(td);});
+                valores.forEach(valor => { const td = document.createElement('td'); td.className = 'text-break'; td.textContent = valor; fila.append(td); });
                 const celdaRutas = document.createElement('td');
                 if (c.rutas.length) {
                     const listaRutas = document.createElement('div');
@@ -3284,64 +3314,64 @@ if (document.getElementById('tablaCuadrillas')) {
                 grupo.className = 'btn-group btn-group-sm text-nowrap';
                 grupo.setAttribute('role', 'group');
                 grupo.setAttribute('aria-label', 'Acciones de la cuadrilla ' + c.idCuadrilla);
-                [['Ver','primary',()=>abrir(c,true)],['Editar','secondary',()=>abrir(c)],['Eliminar','danger',async(event)=>{
+                [['Ver', 'primary', () => abrir(c, true)], ['Editar', 'secondary', () => abrir(c)], ['Eliminar', 'danger', async (event) => {
                     if (!confirm('¿Eliminar la cuadrilla #' + c.idCuadrilla + '?')) return;
                     const boton = event.currentTarget; boton.disabled = true;
                     try {
                         await apiGestion('cuadrillas/' + c.idCuadrilla, 'DELETE');
                         cuadrillas = cuadrillas.filter(q => q.idCuadrilla !== c.idCuadrilla); dibujar();
                     } catch (err) { alert(err.message); boton.disabled = false; }
-                }]].forEach(([texto,color,accion])=>{const boton = document.createElement('button');boton.type='button';boton.className='btn btn-outline-'+color+' btn-sm';boton.textContent=texto;boton.disabled=!usuarios.length||!vehiculos.length;boton.addEventListener('click',accion);grupo.append(boton);});
-                td.append(grupo);fila.append(td);tabla.append(fila);
+                }]].forEach(([texto, color, accion]) => { const boton = document.createElement('button'); boton.type = 'button'; boton.className = 'btn btn-outline-' + color + ' btn-sm'; boton.textContent = texto; boton.disabled = !usuarios.length || !vehiculos.length; boton.addEventListener('click', accion); grupo.append(boton); });
+                td.append(grupo); fila.append(td); tabla.append(fila);
             });
-            if (!tabla.children.length) {const td = tabla.insertRow().insertCell();td.colSpan=7;td.className='text-center text-body-secondary py-4';td.textContent=cargandoCuadrillas?'Cargando cuadrillas...':errorCargaCuadrillas||(filtrando?'No hay cuadrillas que coincidan con los filtros.':'No hay cuadrillas registradas.');}
+            if (!tabla.children.length) { const td = tabla.insertRow().insertCell(); td.colSpan = 7; td.className = 'text-center text-body-secondary py-4'; td.textContent = cargandoCuadrillas ? 'Cargando cuadrillas...' : errorCargaCuadrillas || (filtrando ? 'No hay cuadrillas que coincidan con los filtros.' : 'No hay cuadrillas registradas.'); }
         }
-        campo('filtroTipoVehiculoCuadrilla').addEventListener('change',dibujar);
-        campo('filtroMatriculaCuadrilla').addEventListener('input',dibujar);
-        campo('filtroRutaCuadrilla').addEventListener('change',dibujar);
-        campo('crearCuadrilla').addEventListener('click',()=>abrir());
-        campo('vehiculoCuadrilla').addEventListener('change',actualizarVehiculo);
-        operariosIds.forEach(id=>campo(id).addEventListener('change',actualizarIntegrantes));
+        campo('filtroTipoVehiculoCuadrilla').addEventListener('change', dibujar);
+        campo('filtroMatriculaCuadrilla').addEventListener('input', dibujar);
+        campo('filtroRutaCuadrilla').addEventListener('change', dibujar);
+        campo('crearCuadrilla').addEventListener('click', () => abrir());
+        campo('vehiculoCuadrilla').addEventListener('change', actualizarVehiculo);
+        operariosIds.forEach(id => campo(id).addEventListener('change', actualizarIntegrantes));
         form.addEventListener('submit', async e => {
-            e.preventDefault(); error(''); if(consultando||!form.reportValidity())return;
+            e.preventDefault(); error(''); if (consultando || !form.reportValidity()) return;
             const v = vehiculo();
-            if(!v||v.estado!=='Disponible')return error('Seleccioná un vehículo disponible.');
-            const chofer = usuarios.find(u=>String(u.idUsu)===campo('choferCuadrilla').value);
-            const responsable = usuarios.find(u=>String(u.idUsu)===campo('responsableCuadrilla').value);
-            if(chofer?.tipo!=='Chofer'||responsable?.tipo!=='Operario')return error('Seleccioná un chofer y un operario responsable válidos.');
-            const operarios = operariosIds.slice(1).map(id=>campo(id)).filter(s=>!s.disabled&&s.value).map(s=>Number(s.value));
-            const miembros = [Number(responsable.idUsu),...operarios];
-            if(new Set(miembros).size!==miembros.length)return error('Cada operario puede aparecer una sola vez en la cuadrilla.');
-            if(operarios.length>(v.tipo==='Camioneta'?2:0)||operarios.some(id=>!usuarios.some(u=>Number(u.idUsu)===id&&u.tipo==='Operario')))return error('Revisá los operarios y el cupo del vehículo.');
-            const idsRutas=[...campo('rutasFormularioCuadrilla').querySelectorAll('input:checked')].map(i=>Number(i.value));
-            if(idsRutas.some(id=>!rutas.some(r=>Number(r.idRuta)===id&&compatible(r))))return error('Hay rutas incompatibles con el vehículo.');
-            const payload={idVehiculo:Number(v.idVehiculo),idChofer:Number(chofer.idUsu),idResponsable:Number(responsable.idUsu),operarios,rutas:idsRutas};
+            if (!v || v.estado !== 'Disponible') return error('Seleccioná un vehículo disponible.');
+            const chofer = usuarios.find(u => String(u.idUsu) === campo('choferCuadrilla').value);
+            const responsable = usuarios.find(u => String(u.idUsu) === campo('responsableCuadrilla').value);
+            if (chofer?.tipo !== 'Chofer' || responsable?.tipo !== 'Operario') return error('Seleccioná un chofer y un operario responsable válidos.');
+            const operarios = operariosIds.slice(1).map(id => campo(id)).filter(s => !s.disabled && s.value).map(s => Number(s.value));
+            const miembros = [Number(responsable.idUsu), ...operarios];
+            if (new Set(miembros).size !== miembros.length) return error('Cada operario puede aparecer una sola vez en la cuadrilla.');
+            if (operarios.length > (v.tipo === 'Camioneta' ? 2 : 0) || operarios.some(id => !usuarios.some(u => Number(u.idUsu) === id && u.tipo === 'Operario'))) return error('Revisá los operarios y el cupo del vehículo.');
+            const idsRutas = [...campo('rutasFormularioCuadrilla').querySelectorAll('input:checked')].map(i => Number(i.value));
+            if (idsRutas.some(id => !rutas.some(r => Number(r.idRuta) === id && compatible(r)))) return error('Hay rutas incompatibles con el vehículo.');
+            const payload = { idVehiculo: Number(v.idVehiculo), idChofer: Number(chofer.idUsu), idResponsable: Number(responsable.idUsu), operarios, rutas: idsRutas };
             const idActual = editando;
             campo('guardarCuadrilla').disabled = true;
             try {
                 const c = await apiGestion('cuadrillas' + (idActual !== null ? '/' + idActual : ''), idActual !== null ? 'PUT' : 'POST', payload);
-                if(idActual!==null)cuadrillas=cuadrillas.map(q=>q.idCuadrilla===idActual?c:q);else cuadrillas.push(c);
-                dibujar();bootstrap.Modal.getInstance(campo('modalCuadrilla')).hide();
+                if (idActual !== null) cuadrillas = cuadrillas.map(q => q.idCuadrilla === idActual ? c : q); else cuadrillas.push(c);
+                dibujar(); bootstrap.Modal.getInstance(campo('modalCuadrilla')).hide();
             } catch (err) { error(err.message); }
             finally { campo('guardarCuadrilla').disabled = false; }
 
         });
         dibujar();
         async function catalogo(endpoint) { return apiGestion(endpoint); }
-        const resultados=await Promise.allSettled([catalogo('usuarios'),catalogo('camiones'),catalogo('rutas'),catalogo('cuadrillas')]);
-        usuarios=resultados[0].status==='fulfilled'?resultados[0].value:[];
-        vehiculos=resultados[1].status==='fulfilled'?resultados[1].value:[];
-        rutas=resultados[2].status==='fulfilled'?resultados[2].value:[];
-        cuadrillas=resultados[3].status==='fulfilled'?resultados[3].value:[];
+        const resultados = await Promise.allSettled([catalogo('usuarios'), catalogo('camiones'), catalogo('rutas'), catalogo('cuadrillas')]);
+        usuarios = resultados[0].status === 'fulfilled' ? resultados[0].value : [];
+        vehiculos = resultados[1].status === 'fulfilled' ? resultados[1].value : [];
+        rutas = resultados[2].status === 'fulfilled' ? resultados[2].value : [];
+        cuadrillas = resultados[3].status === 'fulfilled' ? resultados[3].value : [];
         const filtroTipo = campo('filtroTipoVehiculoCuadrilla');
-        [...new Set(vehiculos.map(v => v.tipo).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es')).forEach(tipo => filtroTipo.add(new Option(tipo, tipo)));
+        [...new Set(vehiculos.map(v => v.tipo).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')).forEach(tipo => filtroTipo.add(new Option(tipo, tipo)));
         const filtroRuta = campo('filtroRutaCuadrilla');
         rutas.forEach(r => filtroRuta.add(new Option('Ruta #' + r.idRuta + ' · ' + r.descripcion, r.idRuta)));
 
-        const faltan=resultados.flatMap((r,i)=>r.status==='rejected'?[['usuarios','vehículos','rutas','cuadrillas'][i]]:[]);
-        const disponibles=vehiculos.filter(v=>v.estado==='Disponible');
-        const listo=disponibles.length&&usuarios.some(u=>u.tipo==='Chofer')&&usuarios.some(u=>u.tipo==='Operario');
-        campo('crearCuadrilla').disabled=!listo || faltan.length > 0;
+        const faltan = resultados.flatMap((r, i) => r.status === 'rejected' ? [['usuarios', 'vehículos', 'rutas', 'cuadrillas'][i]] : []);
+        const disponibles = vehiculos.filter(v => v.estado === 'Disponible');
+        const listo = disponibles.length && usuarios.some(u => u.tipo === 'Chofer') && usuarios.some(u => u.tipo === 'Operario');
+        campo('crearCuadrilla').disabled = !listo || faltan.length > 0;
         cargandoCuadrillas = false;
         if (resultados[3].status === 'rejected') {
             errorCargaCuadrillas = 'No se pudieron cargar las cuadrillas. ' + resultados[3].reason.message;

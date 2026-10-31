@@ -1314,56 +1314,49 @@ function cargarTablaContenedores(contenedores) {
 }
 
 
+
 // Cargar contenedores al entrar a la página
 
 if (document.getElementById("tablaContenedores")) {
 
-    fetch("http://localhost:8003/api/contenedores", {
+    const parametros = new URLSearchParams(window.location.search);
+    const idContenedor = parametros.get("idContenedor");
 
-        method: "GET",
+    if (!idContenedor) {
 
-        headers: {
-
-            "Accept": "application/json",
-
-            "Authorization": "Bearer " + getToken()
-
-        }
-
-    })
-        .then(function (respuesta) {
-
-            if (respuesta.status === 403) {
-
-                alert("No tiene permisos para acceder a Contenedores");
-
-                window.location.href = "home.html";
-
-                return null;
+        fetch("http://localhost:8003/api/contenedores", {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "Authorization": "Bearer " + getToken()
             }
-
-            return respuesta.json();
-
         })
-        .then(function (resultado) {
+            .then(function (respuesta) {
 
-            if (!resultado) {
-                return;
-            }
+                if (respuesta.status === 403) {
+                    alert("No tiene permisos para acceder a Contenedores");
+                    window.location.href = "home.html";
+                    return null;
+                }
 
-            cargarTablaContenedores(resultado.data);
+                if (!respuesta.ok) {
+                    throw new Error("No se pudieron cargar los contenedores");
+                }
 
-        })
-        .catch(function (error) {
+                return respuesta.json();
+            })
+            .then(function (resultado) {
 
-            console.error(
-                "Error al cargar contenedores:",
-                error
-            );
+                if (!resultado) return;
 
-        });
-
+                cargarTablaContenedores(resultado.data);
+            })
+            .catch(function (error) {
+                console.error("Error al cargar contenedores:", error);
+            });
+    }
 }
+
 
 
 // Buscar contenedores
@@ -1372,91 +1365,64 @@ const BusquedaContenedores =
     document.getElementById("formBusquedaContenedores");
 
 
+
 if (BusquedaContenedores) {
 
-    BusquedaContenedores.addEventListener(
-        "submit",
-        async function (e) {
+    BusquedaContenedores.addEventListener("submit", async function (e) {
 
-            e.preventDefault();
+        e.preventDefault();
 
-            const id =
-                document
-                    .getElementById("inputIdContenedor")
-                    .value
-                    .trim();
+        const id = document.getElementById("inputIdContenedor").value.trim();
 
-            try {
-
-                const respuesta = await fetch(
-                    "http://localhost:8003/api/contenedores",
-                    {
-                        method: "GET",
-
-                        headers: {
-
-                            "Accept": "application/json",
-
-                            "Authorization":
-                                "Bearer " + getToken()
-
-                        }
+        try {
+            const respuesta = await fetch(
+                "http://localhost:8003/api/contenedores",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + getToken()
                     }
-                );
-
-                if (respuesta.status === 403) {
-
-                    alert(
-                        "No tiene permisos para acceder a Contenedores"
-                    );
-
-                    window.location.href = "home.html";
-
-                    return;
                 }
+            );
 
-                const resultado =
-                    await respuesta.json();
-
-
-                let contenedores =
-                    resultado.data;
-
-
-                if (id !== "") {
-
-                    contenedores =
-                        contenedores.filter(
-                            function (contenedor) {
-
-                                return String(
-                                    contenedor.idContenedor
-                                ) === id;
-
-                            }
-                        );
-
-                }
-
-
-                cargarTablaContenedores(
-                    contenedores
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Error al buscar contenedores:",
-                    error
-                );
-
+            if (respuesta.status === 403) {
+                alert("No tiene permisos para acceder a Contenedores");
+                window.location.href = "home.html";
+                return;
             }
 
+            if (!respuesta.ok) {
+                throw new Error("No se pudieron consultar los contenedores");
+            }
+
+            const resultado = await respuesta.json();
+            let contenedores = resultado.data;
+
+            if (id !== "") {
+                contenedores = contenedores.filter(function (contenedor) {
+                    return String(contenedor.idContenedor) === id;
+                });
+            }
+
+            cargarTablaContenedores(contenedores);
+
+        } catch (error) {
+            console.error("Error al buscar contenedores:", error);
         }
-    );
+
+    });
+
+    const parametros = new URLSearchParams(window.location.search);
+    const idContenedor = parametros.get("idContenedor");
+
+    if (idContenedor && /^[1-9]\d*$/.test(idContenedor)) {
+        document.getElementById("inputIdContenedor").value = idContenedor;
+        BusquedaContenedores.requestSubmit();
+    }
 
 }
+
 
 
 /* ---------------------
@@ -3201,8 +3167,24 @@ if (document.getElementById('tablaIncidencias')) {
             // La consulta de cuadrillas está protegida para administradores.
             try { cuadrillasIncidencias = await apiGestion('cuadrillas'); administraIncidencias = true; }
             catch (err) { if (err.status !== 403) throw err; }
+
             await actualizarIncidencias();
+
+            const parametros = new URLSearchParams(window.location.search);
+            const idIncidencia = parametros.get("idIncidencia");
+
+            if (idIncidencia && /^[1-9]\d*$/.test(idIncidencia)) {
+                const incidencia = incidenciasListado.find(
+                    item => String(item.idIncidencia) === idIncidencia
+                );
+
+                if (incidencia) {
+                    verIncidencia(incidencia);
+                }
+            }
+
             document.getElementById('crearIncidencia').disabled = false;
+
         } catch (err) { mensajeIncidencias(err.message, true); }
     })();
 }
@@ -3378,4 +3360,515 @@ if (document.getElementById('tablaCuadrillas')) {
         }
         dibujar();
     })();
+}
+
+
+let graficaIncidenciasHome = null;
+let graficaContenedoresHome = null;
+let actualizandoEstadisticasHome = false;
+
+function crearOActualizarGraficaHome(id, graficaActual, etiquetas, valores, colores) {
+    const canvas = document.getElementById(id);
+
+    if (!canvas || typeof Chart === "undefined") {
+        return graficaActual;
+    }
+
+    if (graficaActual) {
+        graficaActual.data.labels = etiquetas;
+        graficaActual.data.datasets[0].data = valores;
+        graficaActual.update();
+        return graficaActual;
+    }
+
+    return new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: etiquetas,
+            datasets: [{
+                data: valores,
+                backgroundColor: colores,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+}
+
+let datosInformeHome = {
+    incidencias: null,
+    contenedores: null,
+    camiones: null
+};
+
+async function actualizarEstadisticasHome() {
+    if (actualizandoEstadisticasHome) return;
+
+    actualizandoEstadisticasHome = true;
+
+    try {
+        const resultados = await Promise.allSettled([
+            apiGestion("incidencias"),
+            apiGestion("contenedores"),
+            apiGestion("camiones")
+        ]);
+
+        const [
+            resultadoIncidencias,
+            resultadoContenedores,
+            resultadoCamiones
+        ] = resultados;
+
+        if (resultadoIncidencias.status === "fulfilled") {
+            const incidencias = resultadoIncidencias.value;
+
+            if (!Array.isArray(incidencias)) {
+                throw new Error("Formato de incidencias incorrecto");
+            }
+
+            datosInformeHome.incidencias = incidencias;
+
+            const pendientes = incidencias.filter(
+                incidencia => incidencia.estado === "Pendiente"
+            ).length;
+
+            const enCurso = incidencias.filter(
+                incidencia => incidencia.estado === "En curso"
+            ).length;
+
+            const resueltas = incidencias.filter(
+                incidencia => incidencia.estado === "Resuelta"
+            ).length;
+
+            document.getElementById("totalIncidencias").textContent =
+                incidencias.length;
+
+            document.getElementById("incidenciasPendientes").textContent =
+                pendientes;
+
+            graficaIncidenciasHome = crearOActualizarGraficaHome(
+                "graficaIncidencias",
+                graficaIncidenciasHome,
+                ["Pendientes", "En curso", "Resueltas"],
+                [pendientes, enCurso, resueltas],
+                ["#dc3545", "#ffc107", "#198754"]
+            );
+        } else {
+            console.error(
+                "Error al consultar incidencias:",
+                resultadoIncidencias.reason
+            );
+        }
+
+        if (resultadoContenedores.status === "fulfilled") {
+            const contenedores = resultadoContenedores.value;
+
+            if (!Array.isArray(contenedores)) {
+                throw new Error("Formato de contenedores incorrecto");
+            }
+
+            datosInformeHome.contenedores = contenedores;
+
+            const disponibles = contenedores.filter(
+                contenedor => contenedor.estado === "Disponible"
+            ).length;
+
+            const mantenimiento = contenedores.filter(
+                contenedor => contenedor.estado === "En mantenimiento"
+            ).length;
+
+            const inhabilitados = contenedores.filter(
+                contenedor => contenedor.estado === "Inhabilitado"
+            ).length;
+
+            document.getElementById("totalContenedores").textContent =
+                contenedores.length;
+
+            graficaContenedoresHome = crearOActualizarGraficaHome(
+                "graficaContenedores",
+                graficaContenedoresHome,
+                ["Disponibles", "En mantenimiento", "Inhabilitados"],
+                [disponibles, mantenimiento, inhabilitados],
+                ["#198754", "#ffc107", "#dc3545"]
+            );
+        } else {
+            console.error(
+                "Error al consultar contenedores:",
+                resultadoContenedores.reason
+            );
+        }
+
+        if (resultadoCamiones.status === "fulfilled") {
+            const camiones = resultadoCamiones.value;
+
+            if (!Array.isArray(camiones)) {
+                throw new Error("Formato de vehículos incorrecto");
+            }
+
+            datosInformeHome.camiones = camiones;
+
+            document.getElementById("totalVehiculos").textContent =
+                camiones.length;
+        } else {
+            console.error(
+                "Error al consultar vehículos:",
+                resultadoCamiones.reason
+            );
+        }
+
+    } catch (error) {
+        console.error("Error al actualizar estadísticas:", error);
+    } finally {
+        actualizandoEstadisticasHome = false;
+    }
+}
+
+function generarInformeGeneralHome() {
+    const { incidencias, contenedores, camiones } = datosInformeHome;
+
+    if (
+        !Array.isArray(incidencias) ||
+        !Array.isArray(contenedores) ||
+        !Array.isArray(camiones)
+    ) {
+        alert("No se puede generar el informe. Faltan datos de las APIs.");
+        return;
+    }
+
+    const contarEstado = (registros, estado) =>
+        registros.filter(item => item.estado === estado).length;
+
+    const pendientes = contarEstado(incidencias, "Pendiente");
+    const enCurso = contarEstado(incidencias, "En curso");
+    const resueltas = contarEstado(incidencias, "Resuelta");
+
+    const disponibles = contarEstado(contenedores, "Disponible");
+    const mantenimiento = contarEstado(contenedores, "En mantenimiento");
+    const inhabilitados = contarEstado(contenedores, "Inhabilitado");
+
+    const llenadoElevado = contenedores.filter(
+        contenedor => Number(contenedor.nivelLlenado) >= 80
+    ).length;
+
+    const fecha = new Date().toLocaleString("es-UY");
+
+    const contenidoInforme = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Informe general - SiGeRU</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 40px;
+                    color: #222;
+                }
+                h1 {
+                    color: #198754;
+                    margin-bottom: 5px;
+                }
+                h2 {
+                    color: #198754;
+                    margin-top: 30px;
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 8px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                }
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #e9f5ee;
+                }
+                .fecha {
+                    color: #666;
+                    font-size: 14px;
+                }
+                .pie {
+                    margin-top: 40px;
+                    font-size: 12px;
+                    color: #666;
+                    text-align: center;
+                }
+                @media print {
+                    body {
+                        margin: 20mm;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>SiGeRU</h1>
+            <h3>Sistema de Gestión de Residuos Urbanos</h3>
+            <h2>Informe general del sistema</h2>
+            <p class="fecha">Fecha de generación: ${fecha}</p>
+
+            <h2>1. Resumen general</h2>
+            <table>
+                <tr><th>Indicador</th><th>Cantidad</th></tr>
+                <tr><td>Total de incidencias</td><td>${incidencias.length}</td></tr>
+                <tr><td>Total de contenedores</td><td>${contenedores.length}</td></tr>
+                <tr><td>Total de vehículos</td><td>${camiones.length}</td></tr>
+            </table>
+
+            <h2>2. Estado de las incidencias</h2>
+            <table>
+                <tr><th>Estado</th><th>Cantidad</th></tr>
+                <tr><td>Pendientes</td><td>${pendientes}</td></tr>
+                <tr><td>En curso</td><td>${enCurso}</td></tr>
+                <tr><td>Resueltas</td><td>${resueltas}</td></tr>
+            </table>
+
+            <h2>3. Estado de los contenedores</h2>
+            <table>
+                <tr><th>Estado</th><th>Cantidad</th></tr>
+                <tr><td>Disponibles</td><td>${disponibles}</td></tr>
+                <tr><td>En mantenimiento</td><td>${mantenimiento}</td></tr>
+                <tr><td>Inhabilitados</td><td>${inhabilitados}</td></tr>
+                <tr><td>Con llenado igual o superior al 80%</td><td>${llenadoElevado}</td></tr>
+            </table>
+
+            <h2>4. Vehículos</h2>
+            <table>
+                <tr><th>Indicador</th><th>Cantidad</th></tr>
+                <tr><td>Vehículos registrados</td><td>${camiones.length}</td></tr>
+            </table>
+
+            <p class="pie">
+                Informe generado por SiGeRU - NextGen Corp.
+            </p>
+        </body>
+        </html>
+    `;
+
+    const ventanaInforme = window.open("", "_blank");
+
+    if (!ventanaInforme) {
+        alert("El navegador bloqueó la ventana del informe. Permití las ventanas emergentes.");
+        return;
+    }
+
+    ventanaInforme.document.open();
+    ventanaInforme.document.write(contenidoInforme);
+    ventanaInforme.document.close();
+    ventanaInforme.focus();
+}
+
+if (document.getElementById("graficaIncidencias")) {
+    actualizarEstadisticasHome();
+
+    setInterval(() => {
+        if (!document.hidden) {
+            actualizarEstadisticasHome();
+        }
+    }, 10000);
+
+    const botonInforme = document.getElementById("btnGenerarInforme");
+
+    if (botonInforme) {
+        botonInforme.addEventListener("click", generarInformeGeneralHome);
+    }
+}
+
+
+
+let actualizandoAlertasHome = false;
+
+function escaparTextoAlerta(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[caracter]);
+}
+
+async function actualizarAlertasHome() {
+    if (actualizandoAlertasHome) return;
+
+    const lista = document.getElementById("listaAlertas");
+    if (!lista) return;
+
+    actualizandoAlertasHome = true;
+
+    const estado = document.getElementById("estadoActualizacionAlertas");
+    const contadorIncidencias = document.getElementById("totalAlertasIncidencias");
+    const contadorContenedores = document.getElementById("totalAlertasContenedores");
+
+    try {
+        const resultados = await Promise.allSettled([
+            apiGestion("incidencias"),
+            apiGestion("contenedores")
+        ]);
+
+        const [resultadoIncidencias, resultadoContenedores] = resultados;
+
+        const alertas = [];
+        let consultasCorrectas = 0;
+
+        if (resultadoIncidencias.status === "fulfilled" &&
+            Array.isArray(resultadoIncidencias.value)) {
+
+            consultasCorrectas++;
+
+            const incidenciasUrgentes = resultadoIncidencias.value.filter(
+                incidencia =>
+                    String(incidencia.prioridad ?? "").toLowerCase() === "alta" &&
+                    ["pendiente", "en curso"].includes(
+                        String(incidencia.estado ?? "").toLowerCase()
+                    )
+            );
+
+            contadorIncidencias.textContent = incidenciasUrgentes.length;
+
+
+            incidenciasUrgentes.forEach(incidencia => {
+                alertas.push({
+                    tipo: "incidencia",
+                    titulo: "Incidencia de prioridad alta",
+                    descripcion: `Incidencia #${incidencia.idIncidencia ?? "Sin ID"} - Estado: ${incidencia.estado}`,
+                    color: "danger",
+                    id: incidencia.idIncidencia
+                });
+            });
+
+
+        } else {
+            console.error("No se pudieron consultar las incidencias:",
+                resultadoIncidencias.status === "rejected"
+                    ? resultadoIncidencias.reason
+                    : "Formato incorrecto");
+            contadorIncidencias.textContent = "--";
+        }
+
+        if (resultadoContenedores.status === "fulfilled" &&
+            Array.isArray(resultadoContenedores.value)) {
+
+            consultasCorrectas++;
+
+            const contenedoresLlenos = resultadoContenedores.value.filter(
+                contenedor => {
+                    const nivel = Number(contenedor.nivelLlenado);
+                    return contenedor.nivelLlenado !== null &&
+                        contenedor.nivelLlenado !== undefined &&
+                        contenedor.nivelLlenado !== "" &&
+                        Number.isFinite(nivel) &&
+                        nivel >= 80;
+                }
+            );
+
+            contadorContenedores.textContent = contenedoresLlenos.length;
+
+            contenedoresLlenos.forEach(contenedor => {
+                alertas.push({
+                    tipo: "contenedor",
+                    titulo: "Contenedor con llenado elevado",
+                    descripcion: `Contenedor #${contenedor.idContenedor ?? "Sin ID"} - Llenado: ${contenedor.nivelLlenado}%`,
+                    color: "warning",
+                    id: contenedor.idContenedor
+                });
+            });
+
+        } else {
+            console.error("No se pudieron consultar los contenedores:",
+                resultadoContenedores.status === "rejected"
+                    ? resultadoContenedores.reason
+                    : "Formato incorrecto");
+            contadorContenedores.textContent = "--";
+        }
+
+        if (consultasCorrectas === 0) {
+            estado.className = "badge text-bg-danger";
+            estado.textContent = "Error de conexión";
+            lista.innerHTML = `
+                <p class="text-danger mb-0">
+                    No se pudieron obtener las alertas.
+                </p>
+            `;
+            return;
+        }
+
+        if (consultasCorrectas === 1) {
+            estado.className = "badge text-bg-warning";
+            estado.textContent = "Datos parciales";
+        } else {
+            estado.className = "badge text-bg-success";
+            estado.textContent = "Actualizado";
+        }
+
+        if (alertas.length === 0) {
+            lista.innerHTML = `
+                <div class="alert alert-success mb-0">
+                    No hay alertas activas en los datos disponibles.
+                </div>
+            `;
+            return;
+        }
+
+
+
+        lista.innerHTML = alertas.map(alerta => `
+    <div class="alert alert-${alerta.color} mb-2">
+        <strong>${escaparTextoAlerta(alerta.titulo)}</strong>
+
+        <p class="mb-2">
+            ${escaparTextoAlerta(alerta.descripcion)}
+        </p>
+
+        ${alerta.tipo === "contenedor" && alerta.id != null ? `
+            <a href="listaContenedores.html?idContenedor=${encodeURIComponent(alerta.id)}"
+               class="btn btn-outline-dark btn-sm">
+                Ver contenedor
+            </a>
+        ` : ""}
+
+        ${alerta.tipo === "incidencia" && alerta.id != null ? `
+            <a href="listaIncidencias.html?idIncidencia=${encodeURIComponent(alerta.id)}"
+               class="btn btn-outline-danger btn-sm">
+                Ver incidencia
+            </a>
+        ` : ""}
+    </div>
+`).join("");
+
+
+
+    } catch (error) {
+        console.error("Error al actualizar alertas:", error);
+        estado.className = "badge text-bg-danger";
+        estado.textContent = "Error";
+        lista.innerHTML = `
+            <p class="text-danger mb-0">
+                Ocurrió un error al actualizar las alertas.
+            </p>
+        `;
+    } finally {
+        actualizandoAlertasHome = false;
+    }
+}
+
+if (document.getElementById("panelAlertas")) {
+    actualizarAlertasHome();
+
+    setInterval(() => {
+        if (!document.hidden) {
+            actualizarAlertasHome();
+        }
+    }, 10000);
 }

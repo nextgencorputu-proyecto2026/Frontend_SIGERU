@@ -79,7 +79,7 @@
 
                         <!-- CONTENEDORES -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador,Operario">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -115,7 +115,7 @@
 
                         <!-- CAMIONES -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -142,7 +142,7 @@
 
                         <!-- RUTAS -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador,Operario">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -168,7 +168,7 @@
 
                         <!-- PERSONAL -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -194,7 +194,7 @@
 
                         <!-- CENTROS DE ACOPIO -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -220,7 +220,7 @@
 
                         <!-- MAQUINARIA -->
 
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" data-roles="Administrador,Operario">
 
                                 <a class="nav-link dropdown-toggle text-wrap" href="#" role="button"
                                         data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
@@ -245,10 +245,16 @@
                         </li>
 
 
-                        <li class="nav-item"><a class="nav-link text-wrap" href="listaIncidencias.html">Incidencias</a>
+                        <li class="nav-item" data-roles="Administrador,Operario,Chofer">
+                                <a class="nav-link text-wrap" href="listaIncidencias.html">Incidencias</a>
                         </li>
-                        <li class="nav-item"><a class="nav-link text-wrap" href="rutasChofer.html">Mis rutas</a></li>
-                        <li class="nav-item"><a class="nav-link text-wrap" href="listaCuadrillas.html">Cuadrillas</a>
+                        <li class="nav-item" data-roles="Chofer">
+                                <a class="nav-link text-wrap" href="rutasChofer.html">
+                                        Mis rutas
+                                </a>
+                        </li>
+                        <li class="nav-item" data-roles="Administrador">
+                                <a class="nav-link text-wrap" href="listaCuadrillas.html">Cuadrillas</a>
                         </li>
                 </ul>
                 <div class="d-grid gap-2 d-lg-none mt-4 pt-3 border-top border-secondary">

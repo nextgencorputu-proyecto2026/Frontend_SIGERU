@@ -13,11 +13,13 @@
 </head>
 
 <body class="d-flex flex-column">
-    
+
     <div id="navbar-container"></div>
 
     <main>
-        <div class="container-fluid px-2 px-md-4 mb-3 d-flex justify-content-end"><button type="button" id="agregarContenedorMapa" class="btn btn-primary" aria-controls="altaContenedorPanel" aria-expanded="false">Agregar contenedor</button></div>
+        <div class="container-fluid px-2 px-md-4 mb-3 d-flex justify-content-end"><button type="button"
+                id="agregarContenedorMapa" class="btn btn-primary" aria-controls="altaContenedorPanel"
+                aria-expanded="false">Agregar contenedor</button></div>
         <div class="container-fluid px-2 px-md-4 pb-4">
 
             <div class="row g-3">
@@ -29,10 +31,16 @@
                 </div>
 
                 <div class="col-12 col-lg-4">
-<section id="altaContenedorPanel" data-alta-panel class="card text-start d-none" aria-labelledby="altaContenedorPanelLabel">
-<div class="card-header bg-success text-white"><h2 id="altaContenedorPanelLabel" class="h5 mb-0">Agregar contenedor</h2></div>
-<div class="card-body"><form data-alta="altaContenedor" id="formContenedor" method="POST" action="http://localhost:8003/api/contenedores">
-<div id="ayudaUbicacionAlta" class="alert alert-info py-2" role="status">Seleccione un punto del mapa para cargar la ubicación del contenedor.</div>
+                    <section id="altaContenedorPanel" data-alta-panel class="card text-start d-none"
+                        aria-labelledby="altaContenedorPanelLabel">
+                        <div class="card-header bg-success text-white">
+                            <h2 id="altaContenedorPanelLabel" class="h5 mb-0">Agregar contenedor</h2>
+                        </div>
+                        <div class="card-body">
+                            <form data-alta="altaContenedor" id="formContenedor" method="POST"
+                                action="http://localhost:8003/api/contenedores">
+                                <div id="ayudaUbicacionAlta" class="alert alert-info py-2" role="status">Seleccione un
+                                    punto del mapa para cargar la ubicación del contenedor.</div>
 
                                 <div class="row">
                                     <div class="col-12 col-sm-6 col-lg-12 col-xl-6 mb-3">
@@ -40,8 +48,10 @@
                                             Ubicación X
                                         </label>
 
-                                        <input type="number" class="form-control" id="altaContenedor_ubicacionX" name="ubicacionX"
-                                            placeholder="Seleccione un punto del mapa" aria-describedby="ayudaUbicacionAlta" readonly min="-99.9999" max="99.9999" step="0.0001" required>
+                                        <input type="number" class="form-control" id="altaContenedor_ubicacionX"
+                                            name="ubicacionX" placeholder="Seleccione un punto del mapa"
+                                            aria-describedby="ayudaUbicacionAlta" readonly min="-99.9999" max="99.9999"
+                                            step="0.0001" required>
                                     </div>
 
                                     <div class="col-12 col-sm-6 col-lg-12 col-xl-6 mb-3">
@@ -49,8 +59,10 @@
                                             Ubicación Y
                                         </label>
 
-                                        <input type="number" class="form-control" id="altaContenedor_ubicacionY" name="ubicacionY"
-                                            placeholder="Seleccione un punto del mapa" aria-describedby="ayudaUbicacionAlta" readonly min="-99.9999" max="99.9999" step="0.0001" required>
+                                        <input type="number" class="form-control" id="altaContenedor_ubicacionY"
+                                            name="ubicacionY" placeholder="Seleccione un punto del mapa"
+                                            aria-describedby="ayudaUbicacionAlta" readonly min="-99.9999" max="99.9999"
+                                            step="0.0001" required>
                                     </div>
                                 </div>
 
@@ -87,7 +99,8 @@
                                         Tipo de residuo
                                     </label>
 
-                                    <select class="form-select" id="altaContenedor_tipoResiduo" name="tipoResiduo" required>
+                                    <select class="form-select" id="altaContenedor_tipoResiduo" name="tipoResiduo"
+                                        required>
                                         <option value="" selected disabled> Seleccione el tipo de residuo </option>
                                         <option value="Mixtos">Mixtos</option>
                                         <option value="Reciclables">Reciclables</option>
@@ -108,18 +121,21 @@
 
 
                                 <div class="d-flex flex-column flex-sm-row justify-content-sm-end gap-2">
-                                    <button type="button" class="btn btn-secondary" id="cancelarAltaMapa">Cancelar</button>
-<button type="submit" class="btn btn-primary">
+                                    <button type="button" class="btn btn-secondary"
+                                        id="cancelarAltaMapa">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">
                                         Agregar contenedor
                                     </button>
                                 </div>
 
-                            <div class="alert alert-danger d-none mt-3 mb-0" data-alta-error role="alert"></div>
-</form>
-</div></section>
+                                <div class="alert alert-danger d-none mt-3 mb-0" data-alta-error role="alert"></div>
+                            </form>
+                        </div>
+                    </section>
 
                     <div id="infoContenedor" class="text-start">
-                        <div id="avisoUbicacionEdicion" class="alert alert-info mx-3 mt-3 d-none" role="status">Seleccione un punto del mapa para cambiar la ubicación del contenedor.</div>
+                        <div id="avisoUbicacionEdicion" class="alert alert-info mx-3 mt-3 d-none" role="status">
+                            Seleccione un punto del mapa para cambiar la ubicación del contenedor.</div>
 
                         <div class="container mt-3">
                             <div class="form-group mb-3">
@@ -128,15 +144,18 @@
                             </div>
                             <div class="form-group mb-3">
                                 <label for="Nv_Llenado">Nivel de Llenado:</label>
-                                <input type="number" class="datos form-control" id="Nv_Llenado" min="0" max="100" step="0.01" required readonly>
+                                <input type="number" class="datos form-control" id="Nv_Llenado" min="0" max="100"
+                                    step="0.01" required readonly>
                             </div>
                             <div class="form-group mb-3">
                                 <label for="ubiX">Ubicacion X:</label>
-                                <input type="text" class="datos form-control" id="ubiX" aria-describedby="avisoUbicacionEdicion" readonly>
+                                <input type="text" class="datos form-control" id="ubiX"
+                                    aria-describedby="avisoUbicacionEdicion" readonly>
                             </div>
                             <div class="form-group mb-3">
                                 <label for="ubiY">Ubicacion Y:</label>
-                                <input type="text" class="datos form-control" id="ubiY" aria-describedby="avisoUbicacionEdicion" readonly>
+                                <input type="text" class="datos form-control" id="ubiY"
+                                    aria-describedby="avisoUbicacionEdicion" readonly>
                             </div>
                             <div class="form-group mb-3">
                                 <label for="Ruta">Ruta:</label>
@@ -154,8 +173,10 @@
                         </div>
                         <div class="container mt-3 d-flex flex-column flex-sm-row gap-2">
                             <button type="button" id="btnEditar" class="btn btn-secondary" disabled>Editar</button>
-                            <button type="button" id="btnCancelarEdicionContenedor" class="btn btn-outline-secondary d-none">Cancelar</button>
-                            <button type="button" id="btnEliminar" class="guardar btn btn-danger" disabled>Eliminar</button>
+                            <button type="button" id="btnCancelarEdicionContenedor"
+                                class="btn btn-outline-secondary d-none">Cancelar</button>
+                            <button type="button" id="btnEliminar" class="guardar btn btn-danger"
+                                disabled>Eliminar</button>
                         </div>
 
                     </div>

@@ -174,17 +174,16 @@ window.fetch = async function (recurso, opciones = {}) {
 
     return respuesta;
 };
-//  NAVBAR
+//NAVBAR
 
 async function cargarNavbar() {
     const contenedor = document.getElementById("navbar-container");
 
     if (!contenedor) return;
 
-    const rutaNavbar = "./components/navbar.html?v=cuadrillas-20261011-1";
+    const rutaNavbar = "./components/navbar.html?v=roles-20261101-1";
 
     try {
-
         const respuesta = await fetch(rutaNavbar);
 
         if (!respuesta.ok) {
@@ -193,19 +192,64 @@ async function cargarNavbar() {
             );
         }
 
-        contenedor.innerHTML = await respuesta.text();
+        const htmlNavbar = await respuesta.text();
+
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        const respuestaUsuario = await fetch(
+            "http://localhost:8001/api/auth/me",
+            {
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!respuestaUsuario.ok) {
+            throw new Error("No se pudo verificar el usuario autenticado");
+        }
+
+        const resultadoUsuario = await respuestaUsuario.json();
+        const rol = resultadoUsuario.data?.tipo;
+
+        if (!["Administrador", "Operario", "Chofer"].includes(rol)) {
+            throw new Error("Rol de usuario no válido");
+        }
+
+        sessionStorage.setItem("rolUsuario", rol);
+        document.dispatchEvent(new Event("usuarioAutenticado"));
+
+        contenedor.innerHTML = htmlNavbar;
+
+        contenedor.querySelectorAll("[data-roles]").forEach(elemento => {
+            const rolesPermitidos = elemento.dataset.roles
+                .split(",")
+                .map(rolPermitido => rolPermitido.trim());
+
+            if (!rolesPermitidos.includes(rol)) {
+                elemento.remove();
+            }
+        });
 
     } catch (error) {
+        console.error("Error al cargar el menú:", error);
 
         contenedor.innerHTML = `
             <div class="alert alert-danger">
-                No se pudo cargar la barra de navegación.
+                No se pudo verificar el acceso al menú.
             </div>
         `;
     }
 }
 
 document.addEventListener("DOMContentLoaded", cargarNavbar);
+
 
 
 
@@ -3164,9 +3208,13 @@ if (document.getElementById('tablaIncidencias')) {
     });
     (async () => {
         try {
-            // La consulta de cuadrillas está protegida para administradores.
-            try { cuadrillasIncidencias = await apiGestion('cuadrillas'); administraIncidencias = true; }
-            catch (err) { if (err.status !== 403) throw err; }
+            const rol = sessionStorage.getItem("rolUsuario");
+
+            administraIncidencias = rol === "Administrador";
+
+            if (administraIncidencias) {
+                cuadrillasIncidencias = await apiGestion("cuadrillas");
+            }
 
             await actualizarIncidencias();
 
@@ -3190,10 +3238,180 @@ if (document.getElementById('tablaIncidencias')) {
 }
 
 // Se retiran las rutas y reportes de ejemplo: no existen APIs de recorridos.
+
 if (document.getElementById('listaRutasChofer')) {
-    document.getElementById('listaRutasChofer').textContent = 'La consulta de recorridos asignados aún no está disponible.';
-    ['anteriorChofer', 'siguienteChofer'].forEach(id => document.getElementById(id).disabled = true);
+    (async function inicializarRutasChofer() {
+        const lista = document.getElementById('listaRutasChofer');
+        const anterior = document.getElementById('anteriorChofer');
+        const siguiente = document.getElementById('siguienteChofer');
+        const pagina = document.getElementById('paginaChofer');
+        const leyenda = document.getElementById('leyendaChofer');
+        const elementoMapa = document.getElementById('mapaRutasChofer');
+
+        let rutas = [];
+        let indice = 0;
+        let mapa = null;
+        let marcadores = null;
+
+        anterior.disabled = true;
+        siguiente.disabled = true;
+        lista.textContent = 'Cargando rutas asignadas...';
+
+        if (elementoMapa && typeof L !== 'undefined') {
+            mapa = L.map(elementoMapa).setView([-34.9, -56.16], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 19
+            }).addTo(mapa);
+
+            marcadores = L.featureGroup().addTo(mapa);
+        }
+
+        function mostrarRuta() {
+            lista.replaceChildren();
+            if (marcadores) marcadores.clearLayers();
+
+            if (!rutas.length) {
+                lista.textContent = 'No tenés rutas asignadas.';
+                if (pagina) pagina.textContent = '0 de 0';
+                if (leyenda) leyenda.textContent = 'Sin rutas asignadas.';
+                anterior.disabled = true;
+                siguiente.disabled = true;
+                return;
+            }
+
+            const ruta = rutas[indice];
+            const contenedores = Array.isArray(ruta.contenedores)
+                ? ruta.contenedores
+                : [];
+
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'card border-0';
+
+            const cuerpo = document.createElement('div');
+            cuerpo.className = 'card-body';
+
+            const titulo = document.createElement('h5');
+            titulo.className = 'card-title';
+            titulo.textContent = ruta.descripcion;
+
+            const horario = document.createElement('p');
+            horario.className = 'mb-2';
+            horario.textContent = 'Horario: ' + ruta.horario;
+
+            const tipo = document.createElement('p');
+            tipo.className = 'mb-2';
+            tipo.textContent = 'Tipo de residuo: ' + ruta.tipoResiduo;
+
+            const cantidad = document.createElement('p');
+            cantidad.className = 'mb-0';
+            cantidad.textContent = 'Contenedores asignados: ' + contenedores.length;
+
+            cuerpo.append(titulo, horario, tipo, cantidad);
+            tarjeta.append(cuerpo);
+            lista.append(tarjeta);
+
+            if (pagina) {
+                pagina.textContent = (indice + 1) + ' de ' + rutas.length;
+            }
+
+            anterior.disabled = indice === 0;
+            siguiente.disabled = indice === rutas.length - 1;
+
+            let ubicacionesValidas = 0;
+
+            if (marcadores) {
+                contenedores.forEach(contenedor => {
+                    const lat = Number(contenedor.ubicacionY);
+                    const lng = Number(contenedor.ubicacionX);
+
+                    if (
+                        contenedor.ubicacionY == null ||
+                        contenedor.ubicacionX == null ||
+                        !Number.isFinite(lat) ||
+                        !Number.isFinite(lng) ||
+                        Math.abs(lat) > 90 ||
+                        Math.abs(lng) > 180
+                    ) {
+                        return;
+                    }
+
+                    const contenido = document.createElement('div');
+                    const tituloContenedor = document.createElement('strong');
+                    tituloContenedor.textContent = 'Contenedor #' + contenedor.idContenedor;
+                    contenido.append(tituloContenedor);
+
+                    L.marker([lat, lng])
+                        .bindPopup(contenido)
+                        .addTo(marcadores);
+
+                    ubicacionesValidas++;
+                });
+
+                if (ubicacionesValidas) {
+                    mapa.fitBounds(marcadores.getBounds(), {
+                        padding: [30, 30],
+                        maxZoom: 16
+                    });
+                } else {
+                    mapa.setView([-34.9, -56.16], 12);
+                }
+
+                setTimeout(() => mapa.invalidateSize(), 100);
+            }
+
+            if (leyenda) {
+                leyenda.textContent =
+                    'Ruta #' + ruta.idRuta +
+                    ' — ' + ubicacionesValidas +
+                    ' contenedores ubicados en el mapa.';
+            }
+        }
+
+        anterior.addEventListener('click', () => {
+            if (indice > 0) {
+                indice--;
+                mostrarRuta();
+            }
+        });
+
+        siguiente.addEventListener('click', () => {
+            if (indice < rutas.length - 1) {
+                indice++;
+                mostrarRuta();
+            }
+        });
+
+        try {
+            const respuesta = await fetch('http://localhost:8003/api/mis-rutas', {
+                headers: {
+                    Accept: 'application/json',
+                    Authorization: 'Bearer ' + getToken()
+                }
+            });
+
+            if (!respuesta.ok) {
+                throw new Error('No se pudieron consultar las rutas asignadas.');
+            }
+
+            const resultado = await respuesta.json();
+
+            if (!resultado.success || !Array.isArray(resultado.data)) {
+                throw new Error('La respuesta de la API no es válida.');
+            }
+
+            rutas = resultado.data;
+            mostrarRuta();
+
+        } catch (error) {
+            console.error('Error al cargar las rutas del chofer:', error);
+            lista.textContent = error.message;
+            if (leyenda) leyenda.textContent = 'No se pudo cargar el mapa de rutas.';
+        }
+    })();
 }
+
 if (document.getElementById('paradasChofer')) {
     document.getElementById('progresoChofer').textContent = 'No hay un recorrido real disponible para registrar avances.';
     ['recolectarChofer', 'incidenciaChofer', 'depositoChofer', 'completarRutaChofer'].forEach(id => document.getElementById(id).disabled = true);
@@ -3410,15 +3628,24 @@ let datosInformeHome = {
 };
 
 async function actualizarEstadisticasHome() {
+
     if (actualizandoEstadisticasHome) return;
+
+    const rol = sessionStorage.getItem("rolUsuario");
+
+    if (!rol) return;
 
     actualizandoEstadisticasHome = true;
 
     try {
         const resultados = await Promise.allSettled([
             apiGestion("incidencias"),
-            apiGestion("contenedores"),
-            apiGestion("camiones")
+            rol === "Chofer"
+                ? Promise.resolve(null)
+                : apiGestion("contenedores"),
+            rol === "Administrador"
+                ? apiGestion("camiones")
+                : Promise.resolve(null)
         ]);
 
         const [
@@ -3468,7 +3695,7 @@ async function actualizarEstadisticasHome() {
             );
         }
 
-        if (resultadoContenedores.status === "fulfilled") {
+        if (resultadoContenedores.status === "fulfilled" && Array.isArray(resultadoContenedores.value)) {
             const contenedores = resultadoContenedores.value;
 
             if (!Array.isArray(contenedores)) {
@@ -3499,14 +3726,14 @@ async function actualizarEstadisticasHome() {
                 [disponibles, mantenimiento, inhabilitados],
                 ["#198754", "#ffc107", "#dc3545"]
             );
-        } else {
+        } else if (rol !== "Chofer") {
             console.error(
                 "Error al consultar contenedores:",
                 resultadoContenedores.reason
             );
         }
 
-        if (resultadoCamiones.status === "fulfilled") {
+        if (resultadoCamiones.status === "fulfilled" && Array.isArray(resultadoCamiones.value)) {
             const camiones = resultadoCamiones.value;
 
             if (!Array.isArray(camiones)) {
@@ -3517,7 +3744,7 @@ async function actualizarEstadisticasHome() {
 
             document.getElementById("totalVehiculos").textContent =
                 camiones.length;
-        } else {
+        } else if (rol === "Administrador") {
             console.error(
                 "Error al consultar vehículos:",
                 resultadoCamiones.reason
@@ -3670,7 +3897,7 @@ function generarInformeGeneralHome() {
 }
 
 if (document.getElementById("graficaIncidencias")) {
-    actualizarEstadisticasHome();
+    document.addEventListener("usuarioAutenticado", actualizarEstadisticasHome);
 
     setInterval(() => {
         if (!document.hidden) {
@@ -3712,9 +3939,15 @@ async function actualizarAlertasHome() {
     const contadorContenedores = document.getElementById("totalAlertasContenedores");
 
     try {
+        const rol = sessionStorage.getItem("rolUsuario");
+
+        if (!rol) return;
+
         const resultados = await Promise.allSettled([
             apiGestion("incidencias"),
-            apiGestion("contenedores")
+            rol === "Chofer"
+                ? Promise.resolve(null)
+                : apiGestion("contenedores")
         ]);
 
         const [resultadoIncidencias, resultadoContenedores] = resultados;
@@ -3785,6 +4018,9 @@ async function actualizarAlertasHome() {
                 });
             });
 
+        }
+        else if (rol === "Chofer") {
+            contadorContenedores.textContent = "—";
         } else {
             console.error("No se pudieron consultar los contenedores:",
                 resultadoContenedores.status === "rejected"
@@ -3804,7 +4040,9 @@ async function actualizarAlertasHome() {
             return;
         }
 
-        if (consultasCorrectas === 1) {
+        const consultasEsperadas = rol === "Chofer" ? 1 : 2;
+
+        if (consultasCorrectas < consultasEsperadas) {
             estado.className = "badge text-bg-warning";
             estado.textContent = "Datos parciales";
         } else {
@@ -3864,7 +4102,7 @@ async function actualizarAlertasHome() {
 }
 
 if (document.getElementById("panelAlertas")) {
-    actualizarAlertasHome();
+    document.addEventListener("usuarioAutenticado", actualizarAlertasHome);
 
     setInterval(() => {
         if (!document.hidden) {

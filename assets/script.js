@@ -3099,7 +3099,6 @@ function cargarTablaIncidencias(incidencias) {
     document.getElementById('disponibilidadIncidencias').classList.toggle('d-none', incidenciasListado.length > 0);
     filtrarIncidencias();
 }
-
 function filtrarIncidencias() {
     const buscar = document.getElementById('buscarIncidencia').value;
     const elemento = document.getElementById('elementoIncidencia').value;
@@ -3174,7 +3173,12 @@ if (document.getElementById('tablaIncidencias')) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mapaIncidenciasListado);
         marcadoresIncidenciasListado = L.featureGroup().addTo(mapaIncidenciasListado);
     }
-    ['buscarIncidencia', 'elementoIncidencia', 'estadoIncidencia', 'asignacionIncidencia'].forEach(id => document.getElementById(id).addEventListener('change', filtrarIncidencias));
+    ['buscarIncidencia', 'elementoIncidencia', 'estadoIncidencia', 'asignacionIncidencia'].forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.addEventListener('change', filtrarIncidencias);
+        }
+    });
     cargarTablaIncidencias([]);
     mensajeIncidencias('Cargando incidencias...');
     document.getElementById('elementoFormularioIncidencia').addEventListener('change', () => cambiarTiposIncidencia());
@@ -3206,7 +3210,7 @@ if (document.getElementById('tablaIncidencias')) {
         } catch (err) { document.getElementById('errorFormularioIncidencia').textContent = err.message; }
         finally { boton.disabled = false; }
     });
-    (async () => {
+    async function inicializarIncidencias() {
         try {
             const rol = sessionStorage.getItem("rolUsuario");
 
@@ -3217,6 +3221,14 @@ if (document.getElementById('tablaIncidencias')) {
             }
 
             await actualizarIncidencias();
+
+            setInterval(() => {
+                if (!document.hidden) {
+                    actualizarIncidencias().catch(error => {
+                        console.error("Error al actualizar incidencias:", error);
+                    });
+                }
+            }, 10000);
 
             const parametros = new URLSearchParams(window.location.search);
             const idIncidencia = parametros.get("idIncidencia");
@@ -3231,10 +3243,14 @@ if (document.getElementById('tablaIncidencias')) {
                 }
             }
 
-            document.getElementById('crearIncidencia').disabled = false;
+            document.getElementById("crearIncidencia").disabled = false;
 
-        } catch (err) { mensajeIncidencias(err.message, true); }
-    })();
+        } catch (err) {
+            mensajeIncidencias(err.message, true);
+        }
+    }
+
+    document.addEventListener("usuarioAutenticado", inicializarIncidencias, { once: true });
 }
 
 // Se retiran las rutas y reportes de ejemplo: no existen APIs de recorridos.

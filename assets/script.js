@@ -2215,6 +2215,23 @@ document.addEventListener('DOMContentLoaded', () => {
     LISTAR MAQUINARIAS
 --------------------- */
 
+// Nombres de los centros para mostrarlos en la tabla en vez del número
+const nombresCentros = {};
+
+async function cargarNombresCentros() {
+    try {
+        const respuesta = await fetch("http://localhost:8002/api/centros-acopio", {
+            headers: { "Accept": "application/json", "Authorization": "Bearer " + getToken() }
+        });
+        const resultado = await respuesta.json();
+        if (respuesta.ok && Array.isArray(resultado.data)) {
+            resultado.data.forEach(centro => { nombresCentros[centro.idCentro] = centro.nombre; });
+        }
+    } catch (error) {
+        console.error("Error al cargar centros:", error);
+    }
+}
+
 // Funcion para cargar la tabla
 
 function cargarTablaMaquinarias(maquinarias) {
@@ -2248,7 +2265,7 @@ function cargarTablaMaquinarias(maquinarias) {
                 </td>
 
                 <td>
-                    ${maquinaria.idCentro}
+                    ${nombresCentros[maquinaria.idCentro] || maquinaria.idCentro}
                 </td>
 
                 <td>
@@ -2315,7 +2332,7 @@ if (document.getElementById("tablaMaquinarias")) {
 
             if (resultado.success) {
 
-                cargarTablaMaquinarias(resultado.data);
+                cargarNombresCentros().then(() => cargarTablaMaquinarias(resultado.data));
 
             } else {
 

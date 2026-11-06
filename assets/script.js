@@ -854,6 +854,7 @@ document.addEventListener("click", async function (e) {
 
                 document.getElementById("verUbicacionY").value =
                     centro.ubicacionY;
+                document.getElementById("verUbicacionY").dispatchEvent(new Event("input"));
 
                 [
                     "verNombreCentro",
@@ -1106,6 +1107,65 @@ document.addEventListener("click", async function (e) {
     }
 
 });
+/* ---------------------
+    MAPA PARA ELEGIR LA UBICACIÓN DEL CENTRO
+--------------------- */
+
+// Mapa dentro del modal: al hacer clic completa Ubicación X (latitud) y Ubicación Y (longitud).
+function activarMapaUbicacionCentro(idModal, idMapa, idX, idY) {
+    const modal = document.getElementById(idModal);
+    const contenedor = document.getElementById(idMapa);
+    const campoX = document.getElementById(idX);
+    const campoY = document.getElementById(idY);
+    if (!modal || !contenedor || !campoX || !campoY || typeof L === "undefined") return;
+
+    let mapaCentro = null;
+    let marcador = null;
+
+    function coordenadasValidas() {
+        const lat = Number(campoX.value), lng = Number(campoY.value);
+        if (campoX.value === "" || campoY.value === "" || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+        return [lat, lng];
+    }
+
+    function ubicarMarcador(centrar) {
+        if (!mapaCentro) return;
+        const punto = coordenadasValidas();
+        if (!punto) {
+            if (marcador) { mapaCentro.removeLayer(marcador); marcador = null; }
+            if (centrar) mapaCentro.setView([-34.88, -56.16], 11);
+            return;
+        }
+        if (marcador) marcador.setLatLng(punto);
+        else marcador = L.marker(punto).addTo(mapaCentro);
+        if (centrar) mapaCentro.setView(punto, 15);
+    }
+
+    modal.addEventListener("shown.bs.modal", () => {
+        if (!mapaCentro) {
+            mapaCentro = L.map(contenedor).setView([-34.88, -56.16], 11);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap", maxZoom: 19
+            }).addTo(mapaCentro);
+            mapaCentro.on("click", evento => {
+                // En modo "Ver" los campos están deshabilitados y no se puede cambiar la ubicación.
+                if (campoX.disabled || campoY.disabled) return;
+                campoX.value = evento.latlng.lat.toFixed(4);
+                campoY.value = evento.latlng.lng.toFixed(4);
+                ubicarMarcador(false);
+            });
+        }
+        mapaCentro.invalidateSize();
+        ubicarMarcador(true);
+    });
+
+    // Si se escriben las coordenadas a mano, el marcador se mueve.
+    [campoX, campoY].forEach(campo => campo.addEventListener("input", () => ubicarMarcador(true)));
+}
+
+activarMapaUbicacionCentro("altaCentroModal", "mapaAltaCentro", "altaCentro_ubicacionX", "altaCentro_ubicacionY");
+activarMapaUbicacionCentro("datosCentro", "mapaEditarCentro", "verUbicacionX", "verUbicacionY");
 /* ---------------------
     BUSCAR CENTRO
 --------------------- */

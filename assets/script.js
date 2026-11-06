@@ -2871,6 +2871,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('formRuta');
     const botonNuevo = document.getElementById('nuevaRuta');
     const botonEditar = document.getElementById('editarRuta');
+    const botonEliminar = document.getElementById('eliminarRuta');
     const buscar = document.getElementById('buscarRuta');
     const anterior = document.getElementById('paginaAnteriorRutas');
     const siguiente = document.getElementById('paginaSiguienteRutas');
@@ -3088,6 +3089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             boton.addEventListener('click', () => {
                 seleccionada = ruta;
                 botonEditar.disabled = false;
+                botonEliminar.disabled = false;
                 dibujarLista();
                 dibujarMapa();
                 if (!formulario.classList.contains('d-none') && modoFormulario === 'editar') completarFormulario(ruta);
@@ -3100,7 +3102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     function completarFormulario(ruta) {
         document.getElementById('descripcionRuta').value = ruta.descripcion || '';
-        document.getElementById('horarioRuta').value = ruta.horario || '';
+        document.getElementById('horarioRuta').value = (ruta.horario || '').slice(0, 5);
         document.getElementById('tipoResiduoRuta').value = ruta.tipoResiduo || '';
         document.getElementById('identificadorRuta').value = ruta.idRuta;
         document.getElementById('contenedoresRuta').value = contenedores.filter(c => String(c.idRuta) === String(ruta.idRuta)).length;
@@ -3109,9 +3111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         modoFormulario = modo;
         form.reset();
         document.getElementById('tituloFormularioRuta').textContent = modo === 'editar' ? 'Editar ruta' : 'Nueva ruta';
-        document.getElementById('estadoGuardadoRuta').textContent = modo === 'editar'
-            ? 'Puede consultar y ajustar los datos. El guardado estará disponible al habilitar la edición de rutas.'
-            : 'Puede completar el formulario. El guardado estará disponible al habilitar el alta de rutas.';
+        document.getElementById('estadoGuardadoRuta').textContent = '';
         if (modo === 'editar' && seleccionada) completarFormulario(seleccionada);
         formulario.classList.remove('d-none');
         columnaLista.classList.replace('col-lg-4', 'col-lg-3');
@@ -3147,6 +3147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         buscar.value = '';
         pagina = 1;
         botonEditar.disabled = true;
+        botonEliminar.disabled = true;
         if (modoFormulario === 'editar') cerrarFormulario();
         dibujarLista();
         dibujarMapa();
@@ -3155,7 +3156,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     buscar.addEventListener('input', () => { pagina = 1; dibujarLista(); });
     anterior.addEventListener('click', () => { pagina--; dibujarLista(); });
     siguiente.addEventListener('click', () => { pagina++; dibujarLista(); });
-    form.addEventListener('submit', e => e.preventDefault());
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const estado = document.getElementById('estadoGuardadoRuta');
+        const guardar = document.getElementById('guardarRuta');
+        const editando = modoFormulario === 'editar' && seleccionada;
+        const datos = {
+            descripcion: document.getElementById('descripcionRuta').value.trim(),
+            horario: document.getElementById('horarioRuta').value.slice(0, 5),
+            tipoResiduo: document.getElementById('tipoResiduoRuta').value
+        };
+        guardar.disabled = true;
+        estado.textContent = 'Guardando...';
+        try {
+            const respuesta = await fetch(obtenerUrlApi(editando ? 'rutas/' + seleccionada.idRuta : 'rutas'), {
+                method: editando ? 'PUT' : 'POST',
+                headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+                body: JSON.stringify(datos)
+            });
+            const resultado = await respuesta.json().catch(() => ({}));
+            if (!respuesta.ok) {
+                const errores = resultado.errors ? Object.values(resultado.errors).flat().join(' ') : '';
+                throw new Error(errores || resultado.mensaje || resultado.message || 'No se pudo guardar la ruta.');
+            }
+            const idGuardada = editando ? seleccionada.idRuta : (resultado.data && resultado.data.idRuta);
+            rutas = await consultar('rutas');
+            cerrarFormulario();
+            seleccionada = rutas.find(r => String(r.idRuta) === String(idGuardada)) || null;
+            botonEditar.disabled = !seleccionada;
+            botonEliminar.disabled = !seleccionada;
+            dibujarLista();
+            dibujarMapa();
+            alert(resultado.mensaje || 'Ruta guardada correctamente.');
+        } catch (error) {
+            estado.textContent = error.message;
+        } finally {
+            guardar.disabled = false;
+        }
+    });
+    // Eliminar ruta: la API rechaza si tiene contenedores, cuadrillas o recolecciones.
+    botonEliminar.addEventListener('click', async () => {
+        if (!seleccionada) return;
+        if (!confirm('¿Está seguro de eliminar la ruta "' + seleccionada.descripcion + '"?')) return;
+        try {
+            const respuesta = await fetch(obtenerUrlApi('rutas/' + seleccionada.idRuta), {
+                method: 'DELETE',
+                headers: { Accept: 'application/json', Authorization: 'Bearer ' + getToken() }
+            });
+            const resultado = await respuesta.json().catch(() => ({}));
+            if (!respuesta.ok) throw new Error(resultado.mensaje || resultado.message || 'No se pudo eliminar la ruta.');
+            rutas = await consultar('rutas');
+            mostrarTodasRutas();
+            alert(resultado.mensaje || 'Ruta eliminada correctamente.');
+        } catch (error) {
+            alert(error.message);
+        }
+    });
     window.addEventListener('hashchange', abrirDesdeEnlace);
     abrirDesdeEnlace();
     async function consultar(endpoint) {

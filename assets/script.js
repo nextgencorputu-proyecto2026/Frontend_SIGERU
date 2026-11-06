@@ -2949,6 +2949,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const botonNuevo = document.getElementById('nuevaRuta');
     const botonEditar = document.getElementById('editarRuta');
     const botonEliminar = document.getElementById('eliminarRuta');
+    // Crear, editar y eliminar rutas es solo del Administrador (igual que en la API)
+    function mostrarAccionesRutaSegunRol() {
+        const esAdministrador = sessionStorage.getItem('rolUsuario') === 'Administrador';
+        [botonNuevo, botonEditar, botonEliminar].forEach(boton => boton.classList.toggle('d-none', !esAdministrador));
+    }
+    mostrarAccionesRutaSegunRol();
+    document.addEventListener('usuarioAutenticado', mostrarAccionesRutaSegunRol);
     const buscar = document.getElementById('buscarRuta');
     const anterior = document.getElementById('paginaAnteriorRutas');
     const siguiente = document.getElementById('paginaSiguienteRutas');

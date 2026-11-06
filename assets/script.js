@@ -1305,6 +1305,7 @@ async function mostrarInformacion(contenedor) {
 
 // Ejecutar mapa solamente si existe
 
+
 if (document.getElementById("mapa")) {
 
     cargarMapaContenedores();
@@ -1313,7 +1314,64 @@ if (document.getElementById("mapa")) {
         cargarRutasEnSelect("Ruta", this.value, "", true);
     });
 
+    const selectRutaRecorrido = document.getElementById("selectRutaRecorrido");
+    const btnVerRecorrido = document.getElementById("btnVerRecorrido");
+    const mensajeRecorrido = document.getElementById("mensajeRecorrido");
+
+    if (selectRutaRecorrido && btnVerRecorrido) {
+
+        selectRutaRecorrido.addEventListener("change", function () {
+            btnVerRecorrido.disabled = !this.value;
+        });
+
+        async function cargarRutasRecorrido() {
+            try {
+                const respuesta = await fetch(
+                    "http://localhost:8003/api/rutas",
+                    {
+                        headers: {
+                            "Accept": "application/json",
+                            "Authorization": "Bearer " + getToken()
+                        }
+                    }
+                );
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudieron consultar las rutas");
+                }
+
+                const resultado = await respuesta.json();
+
+                if (!Array.isArray(resultado.data)) {
+                    throw new Error("Respuesta de rutas inválida");
+                }
+
+                selectRutaRecorrido.innerHTML =
+                    '<option value="">Seleccione una ruta</option>';
+
+                resultado.data.forEach(ruta => {
+                    const opcion = document.createElement("option");
+                    opcion.value = ruta.idRuta;
+                    opcion.textContent =
+                        ruta.descripcion + " (" + ruta.tipoResiduo + ")";
+                    selectRutaRecorrido.appendChild(opcion);
+                });
+
+                mensajeRecorrido.textContent = resultado.data.length
+                    ? ""
+                    : "No hay rutas registradas.";
+
+            } catch (error) {
+                console.error("Error al cargar rutas:", error);
+                mensajeRecorrido.textContent =
+                    "No se pudieron cargar las rutas de recolección.";
+            }
+        }
+
+        cargarRutasRecorrido();
+    }
 }
+
 
 /* ---------------------
     LISTAR CONTENEDORES
@@ -2818,6 +2876,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const siguiente = document.getElementById('paginaSiguienteRutas');
     const detalleMapa = document.getElementById('detalleMapaRutas');
     const leyenda = document.getElementById('leyendaRutas');
+    const btnVerRecorridoRuta = document.getElementById('btnVerRecorridoRuta');
+    const btnLimpiarRecorridoRuta = document.getElementById('btnLimpiarRecorridoRuta');
+    const infoRecorridoRuta = document.getElementById('infoRecorridoRuta');
     const estilos = [
         { color: '#0d6efd', clase: 'text-bg-primary' },
         { color: '#198754', clase: 'text-bg-success' },
@@ -2829,8 +2890,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     let rutas = [], contenedores = [], seleccionada = null, pagina = 1;
     let modoFormulario = 'nuevo';
     const porPagina = 5;
+
     const mapaRutas = window.L ? L.map(mapaElemento).setView([-34.8965, -56.131], 13) : null;
     const capa = mapaRutas ? L.layerGroup().addTo(mapaRutas) : null;
+    const capaRecorrido = mapaRutas ? L.layerGroup().addTo(mapaRutas) : null;
+    let solicitudRecorrido = 0;
+
     if (mapaRutas) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap', maxZoom: 19
@@ -2842,32 +2907,166 @@ document.addEventListener('DOMContentLoaded', async () => {
     const esSeleccionada = ruta => seleccionada && String(ruta.idRuta) === String(seleccionada.idRuta);
     const puntosRuta = ruta => contenedores.filter(c => c.idRuta != null && String(c.idRuta) === String(ruta.idRuta) && c.ubicacionX != null && c.ubicacionY != null && c.ubicacionX !== '' && c.ubicacionY !== '' && Number.isFinite(Number(c.ubicacionX)) && Number.isFinite(Number(c.ubicacionY)) && Math.abs(Number(c.ubicacionY)) <= 90 && Math.abs(Number(c.ubicacionX)) <= 180);
 
+
+    btnVerRecorridoRuta.addEventListener('click', async () => {
+        if (!mapaRutas || !capaRecorrido || !seleccionada) return;
+
+        const puntos = puntosRuta(seleccionada);
+        if (puntos.length < 2) return;
+
+        const solicitudActual = ++solicitudRecorrido;
+        const idRutaActual = String(seleccionada.idRuta);
+
+        capaRecorrido.clearLayers();
+        btnVerRecorridoRuta.disabled = true;
+        infoRecorridoRuta.textContent = 'Calculando recorrido por las calles...';
+
+        const coordenadas = puntos.map(contenedor =>
+            Number(contenedor.ubicacionX) + ',' +
+            Number(contenedor.ubicacionY)
+        ).join(';');
+
+        const url = 'https://router.project-osrm.org/route/v1/driving/' +
+            coordenadas +
+            '?overview=full&geometries=geojson&steps=false';
+
+        try {
+            const respuesta = await fetch(url);
+
+            if (!respuesta.ok) {
+                throw new Error('No se pudo consultar el servicio de rutas.');
+            }
+
+            const resultado = await respuesta.json();
+
+            if (solicitudActual !== solicitudRecorrido ||
+                !seleccionada ||
+                String(seleccionada.idRuta) !== idRutaActual) return;
+
+            if (resultado.code !== 'Ok' || !resultado.routes?.length) {
+                throw new Error('No se encontró un recorrido entre los contenedores.');
+            }
+
+            const recorrido = resultado.routes[0];
+
+            const linea = L.geoJSON(recorrido.geometry, {
+                style: {
+                    color: '#0d6efd',
+                    weight: 5,
+                    opacity: 0.85
+                }
+            }).addTo(capaRecorrido);
+
+            mapaRutas.fitBounds(linea.getBounds(), {
+                padding: [30, 30]
+            });
+
+            btnLimpiarRecorridoRuta.disabled = false;
+
+            infoRecorridoRuta.textContent =
+                'Ruta ' + idRutaActual + ': ' +
+                puntos.length + ' contenedores. Distancia aproximada: ' +
+                (recorrido.distance / 1000).toFixed(2) + ' km.';
+
+        } catch (error) {
+            if (solicitudActual !== solicitudRecorrido) return;
+
+            console.error('Error al calcular recorrido:', error);
+            infoRecorridoRuta.textContent = error.message;
+        } finally {
+            if (solicitudActual === solicitudRecorrido) {
+                btnVerRecorridoRuta.disabled = false;
+            }
+        }
+    });
+
+    btnLimpiarRecorridoRuta.addEventListener('click', () => {
+        solicitudRecorrido++;
+        capaRecorrido.clearLayers();
+        btnLimpiarRecorridoRuta.disabled = true;
+
+        infoRecorridoRuta.textContent = seleccionada
+            ? 'Ruta seleccionada: ' + seleccionada.descripcion
+            : 'Seleccione una ruta para visualizar su recorrido.';
+    });
+
+
     function dibujarMapa() {
         if (capa) capa.clearLayers();
+        solicitudRecorrido++;
+        capaRecorrido?.clearLayers();
+        if (btnLimpiarRecorridoRuta) btnLimpiarRecorridoRuta.disabled = true;
+
+
         leyenda.replaceChildren();
+
         const limites = [];
         const visibles = seleccionada ? rutas.filter(esSeleccionada) : rutas;
+
+        if (btnVerRecorridoRuta) {
+            btnVerRecorridoRuta.disabled =
+                !seleccionada || puntosRuta(seleccionada).length < 2;
+        }
+
+        if (infoRecorridoRuta) {
+            infoRecorridoRuta.textContent = seleccionada
+                ? 'Ruta seleccionada: ' + seleccionada.descripcion
+                : 'Seleccione una ruta para visualizar su recorrido.';
+        }
+
         for (const ruta of visibles) {
             const estilo = estilos[rutas.indexOf(ruta) % estilos.length];
             const puntos = puntosRuta(ruta);
+
             const etiqueta = document.createElement('span');
             etiqueta.className = 'badge ' + estilo.clase + ' text-wrap text-start';
-            etiqueta.textContent = 'Ruta ' + ruta.idRuta + ': ' + ruta.descripcion + (puntos.length ? ' (' + puntos.length + ')' : ' — sin ubicaciones');
+            etiqueta.textContent =
+                'Ruta ' + ruta.idRuta + ': ' + ruta.descripcion +
+                (puntos.length ? ' (' + puntos.length + ')' : ' — sin ubicaciones');
+
             leyenda.appendChild(etiqueta);
+
             if (!capa) continue;
+
             puntos.forEach(contenedor => {
-                const ubicacion = [Number(contenedor.ubicacionY), Number(contenedor.ubicacionX)];
+                const ubicacion = [
+                    Number(contenedor.ubicacionY),
+                    Number(contenedor.ubicacionX)
+                ];
+
                 limites.push(ubicacion);
+
                 const texto = document.createElement('div');
-                texto.textContent = 'Ruta ' + ruta.idRuta + ' — ' + ruta.descripcion + ' | Contenedor ' + contenedor.idContenedor;
-                L.circleMarker(ubicacion, { radius: 8, color: estilo.color, fillColor: estilo.color, fillOpacity: 0.85, weight: 2 }).bindPopup(texto).addTo(capa);
+                texto.textContent =
+                    'Ruta ' + ruta.idRuta + ' — ' + ruta.descripcion +
+                    ' | Contenedor ' + contenedor.idContenedor;
+
+                L.circleMarker(ubicacion, {
+                    radius: 8,
+                    color: estilo.color,
+                    fillColor: estilo.color,
+                    fillOpacity: 0.85,
+                    weight: 2
+                }).bindPopup(texto).addTo(capa);
             });
         }
-        if (limites.length) mapaRutas.fitBounds(limites, { padding: [24, 24], maxZoom: 16 });
+
+        if (limites.length) {
+            mapaRutas.fitBounds(limites, {
+                padding: [24, 24],
+                maxZoom: 16
+            });
+        }
+
         detalleMapa.textContent = seleccionada
-            ? 'Ruta ' + seleccionada.idRuta + ': ' + puntosRuta(seleccionada).length + ' contenedores con ubicación.'
-            : rutas.length + ' rutas registradas; ' + limites.length + ' contenedores con ubicación en el mapa.';
+            ? 'Ruta ' + seleccionada.idRuta + ': ' +
+            puntosRuta(seleccionada).length +
+            ' contenedores con ubicación.'
+            : rutas.length + ' rutas registradas; ' +
+            limites.length +
+            ' contenedores con ubicación en el mapa.';
     }
+
     function dibujarLista() {
         const termino = buscar.value.trim().toLocaleLowerCase();
         const filtradas = rutas.filter(r => (String(r.idRuta) + ' ' + r.descripcion).toLocaleLowerCase().includes(termino));

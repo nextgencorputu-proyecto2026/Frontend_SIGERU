@@ -3454,6 +3454,7 @@ if (document.getElementById('tablaIncidencias')) {
 
 // Se retiran las rutas y reportes de ejemplo: no existen APIs de recorridos.
 
+
 if (document.getElementById('listaRutasChofer')) {
     (async function inicializarRutasChofer() {
         const lista = document.getElementById('listaRutasChofer');
@@ -3467,6 +3468,8 @@ if (document.getElementById('listaRutasChofer')) {
         let indice = 0;
         let mapa = null;
         let marcadores = null;
+        let capaRecorrido = null;
+        let solicitudRecorrido = 0;
 
         anterior.disabled = true;
         siguiente.disabled = true;
@@ -3481,11 +3484,88 @@ if (document.getElementById('listaRutasChofer')) {
             }).addTo(mapa);
 
             marcadores = L.featureGroup().addTo(mapa);
+            capaRecorrido = L.featureGroup().addTo(mapa);
+        }
+
+        async function dibujarRecorrido(puntos, idRuta) {
+            const solicitudActual = ++solicitudRecorrido;
+
+            if (!mapa || !capaRecorrido || puntos.length < 2) {
+                return;
+            }
+
+            if (leyenda) {
+                leyenda.textContent =
+                    'Calculando recorrido de la ruta #' + idRuta + '...';
+            }
+
+            const coordenadas = puntos
+                .map(punto => punto.lng + ',' + punto.lat)
+                .join(';');
+
+            const url =
+                'https://router.project-osrm.org/route/v1/driving/' +
+                coordenadas +
+                '?overview=full&geometries=geojson&steps=false';
+
+            try {
+                const respuesta = await fetch(url);
+
+                if (!respuesta.ok) {
+                    throw new Error('No se pudo consultar el servicio de rutas.');
+                }
+
+                const resultado = await respuesta.json();
+
+                if (solicitudActual !== solicitudRecorrido) return;
+
+                if (resultado.code !== 'Ok' || !resultado.routes?.length) {
+                    throw new Error(
+                        'No se encontró un recorrido entre los contenedores.'
+                    );
+                }
+
+                const recorrido = resultado.routes[0];
+
+                const linea = L.geoJSON(recorrido.geometry, {
+                    style: {
+                        color: '#0d6efd',
+                        weight: 5,
+                        opacity: 0.85
+                    }
+                }).addTo(capaRecorrido);
+
+                mapa.fitBounds(linea.getBounds(), {
+                    padding: [30, 30]
+                });
+
+                if (leyenda) {
+                    leyenda.textContent =
+                        'Ruta #' + idRuta +
+                        ' — ' + puntos.length +
+                        ' contenedores. Distancia aproximada: ' +
+                        (recorrido.distance / 1000).toFixed(2) + ' km.';
+                }
+
+            } catch (error) {
+                if (solicitudActual !== solicitudRecorrido) return;
+
+                console.error('Error al calcular recorrido del chofer:', error);
+
+                if (leyenda) {
+                    leyenda.textContent =
+                        'Ruta #' + idRuta + ': ' + error.message;
+                }
+            }
         }
 
         function mostrarRuta() {
+            solicitudRecorrido++;
+
             lista.replaceChildren();
+
             if (marcadores) marcadores.clearLayers();
+            if (capaRecorrido) capaRecorrido.clearLayers();
 
             if (!rutas.length) {
                 lista.textContent = 'No tenés rutas asignadas.';
@@ -3497,6 +3577,7 @@ if (document.getElementById('listaRutasChofer')) {
             }
 
             const ruta = rutas[indice];
+
             const contenedores = Array.isArray(ruta.contenedores)
                 ? ruta.contenedores
                 : [];
@@ -3517,24 +3598,27 @@ if (document.getElementById('listaRutasChofer')) {
 
             const tipo = document.createElement('p');
             tipo.className = 'mb-2';
-            tipo.textContent = 'Tipo de residuo: ' + ruta.tipoResiduo;
+            tipo.textContent =
+                'Tipo de residuo: ' + ruta.tipoResiduo;
 
             const cantidad = document.createElement('p');
             cantidad.className = 'mb-0';
-            cantidad.textContent = 'Contenedores asignados: ' + contenedores.length;
+            cantidad.textContent =
+                'Contenedores asignados: ' + contenedores.length;
 
             cuerpo.append(titulo, horario, tipo, cantidad);
             tarjeta.append(cuerpo);
             lista.append(tarjeta);
 
             if (pagina) {
-                pagina.textContent = (indice + 1) + ' de ' + rutas.length;
+                pagina.textContent =
+                    (indice + 1) + ' de ' + rutas.length;
             }
 
             anterior.disabled = indice === 0;
             siguiente.disabled = indice === rutas.length - 1;
 
-            let ubicacionesValidas = 0;
+            const puntos = [];
 
             if (marcadores) {
                 contenedores.forEach(contenedor => {
@@ -3553,18 +3637,23 @@ if (document.getElementById('listaRutasChofer')) {
                     }
 
                     const contenido = document.createElement('div');
-                    const tituloContenedor = document.createElement('strong');
-                    tituloContenedor.textContent = 'Contenedor #' + contenedor.idContenedor;
+
+                    const tituloContenedor =
+                        document.createElement('strong');
+
+                    tituloContenedor.textContent =
+                        'Contenedor #' + contenedor.idContenedor;
+
                     contenido.append(tituloContenedor);
 
                     L.marker([lat, lng])
                         .bindPopup(contenido)
                         .addTo(marcadores);
 
-                    ubicacionesValidas++;
+                    puntos.push({ lat, lng });
                 });
 
-                if (ubicacionesValidas) {
+                if (puntos.length) {
                     mapa.fitBounds(marcadores.getBounds(), {
                         padding: [30, 30],
                         maxZoom: 16
@@ -3579,8 +3668,15 @@ if (document.getElementById('listaRutasChofer')) {
             if (leyenda) {
                 leyenda.textContent =
                     'Ruta #' + ruta.idRuta +
-                    ' — ' + ubicacionesValidas +
+                    ' — ' + puntos.length +
                     ' contenedores ubicados en el mapa.';
+            }
+
+            if (puntos.length >= 2) {
+                dibujarRecorrido(puntos, ruta.idRuta);
+            } else if (leyenda && puntos.length === 1) {
+                leyenda.textContent +=
+                    ' Se necesitan al menos dos contenedores para calcular el recorrido.';
             }
         }
 
@@ -3599,15 +3695,20 @@ if (document.getElementById('listaRutasChofer')) {
         });
 
         try {
-            const respuesta = await fetch('http://localhost:8003/api/mis-rutas', {
-                headers: {
-                    Accept: 'application/json',
-                    Authorization: 'Bearer ' + getToken()
+            const respuesta = await fetch(
+                'http://localhost:8003/api/mis-rutas',
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        Authorization: 'Bearer ' + getToken()
+                    }
                 }
-            });
+            );
 
             if (!respuesta.ok) {
-                throw new Error('No se pudieron consultar las rutas asignadas.');
+                throw new Error(
+                    'No se pudieron consultar las rutas asignadas.'
+                );
             }
 
             const resultado = await respuesta.json();
@@ -3622,10 +3723,15 @@ if (document.getElementById('listaRutasChofer')) {
         } catch (error) {
             console.error('Error al cargar las rutas del chofer:', error);
             lista.textContent = error.message;
-            if (leyenda) leyenda.textContent = 'No se pudo cargar el mapa de rutas.';
+
+            if (leyenda) {
+                leyenda.textContent =
+                    'No se pudo cargar el mapa de rutas.';
+            }
         }
     })();
 }
+
 
 if (document.getElementById('paradasChofer')) {
     document.getElementById('progresoChofer').textContent = 'No hay un recorrido real disponible para registrar avances.';
